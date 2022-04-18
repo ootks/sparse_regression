@@ -46,11 +46,13 @@ function conditional_char(X, t, k, n)
 end
 
 function find_subset(A, b, k)
-    X = transpose(A)*A
-    Z = X + (transpose(A)*b*transpose(b)*A)
-    
+    n = size(A,1)
+    # Features selected
     T = [] 
-    n = size(X,1)
+    # Maintain X = A^T A \ T, where \ denotes the schur complement
+    X = transpose(A)*A
+    # Maintain Z = (A^T A + A^Tbb^TA) \ T
+    Z = X + (transpose(A)*b*transpose(b)*A)
 
     for t=1:k
         best = 0
@@ -65,7 +67,7 @@ function find_subset(A, b, k)
             pX = conditional_char(X, t, k, n)
             pZ = conditional_char(Z, t, k, n)
             char = (pZ-pX)/pX
-            if char > best
+            if char > best_char
                 best = j
                 best_char = char
             end
@@ -86,7 +88,7 @@ function find_subset(A, b, k)
     return T
 end
 
-println(find_subset(Symmetric(Matrix(I, 1000, 1000)), [1 for i=1:1000], 5))
+println(find_subset(Symmetric(Matrix(I, 100, 100)), [1 for i=1:100], 5))
 
 """
 Diagonalize the matrix, and then compute the elementary symmetric polynomials of the matrix
