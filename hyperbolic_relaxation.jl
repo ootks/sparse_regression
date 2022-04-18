@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Profile
 """
     char_coeffs(X, k)
 
@@ -10,12 +11,12 @@ using LinearAlgebra
 function char_coeff_FL(X, k::Int64)
     powers = [X]
     half_k = (k÷2)
-    @inbounds for i=1:half_k
+    for i=1:half_k
         push!(powers, Symmetric(last(powers) * X))
     end
 
     traces = [tr(A) for A in powers]
-    @inbounds for i=(half_k+1):k
+    for i=(half_k+1):k
         push!(traces, dot(last(powers), powers[i-half_k]))
     end
 
@@ -45,8 +46,41 @@ function conditional_char(X, t, k, n)
     X[t,t] * char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t], k-t)
 end
 
-function find_subset(A, b, k)
-    n = size(A,1)
+"""
+Diagonalize the matrix, and then compute the elementary symmetric polynomials of the matrix
+"""
+function char_coeff_eigen(X, k::Int64)
+    e = eigvals(Symmetric(X))
+    n = length(e)
+    # Dynamic programming table. 
+    # e_k^n = e_k^n + xn e_{k-1}^{n-1}
+    dp_table = zeros(n+1, k)
+    for j=2:n+1
+        dp_table[j, 1] = dp_table[j-1, 1] + e[j-1]
+    end
+    for i=2:k
+        for j=2:n+1
+            dp_table[j,i] = dp_table[j-1, i] + e[j-1] * dp_table[j-1,i-1]
+        end
+    end
+    dp_table[n+1,k]
+end
+
+"""
+Heuristic for finding a set of k variables T that minimizes the least squares
+error:
+min |A|_T x - b|^2
+
+A: An n x m matrix
+b: A vector of length n
+k: Size of output set
+search: If this is true, find the best element to add to T in each round.
+If false, find the first element that does at least as well as char_coeff_FL(X)
+verbose: If this is true, print out the scores over time.
+"""
+function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64, 
+                    search::Bool=true, verbose::Bool=false)
+    n = size(A,2)
     # Features selected
     T = [] 
     # Maintain X = A^T A \ T, where \ denotes the schur complement
@@ -54,10 +88,20 @@ function find_subset(A, b, k)
     # Maintain Z = (A^T A + A^Tbb^TA) \ T
     Z = X + (transpose(A)*b*transpose(b)*A)
 
+    if !search
+        pX = char_coeff_FL(X, k)
+        pZ = char_coeff_FL(Z, k)
+        best_char = (pZ-pX)/pX
+    end
     for t=1:k
+        if verbose
+            println("Round ", t)
+        end
         best = 0
-        best_char = 0
-        println("Round ", t)
+        if search
+            best_char = 0
+        end
+
         for j=t:n
             # Reposition so that the candidate is in position t.
             if j != t
@@ -69,7 +113,11 @@ function find_subset(A, b, k)
             char = (pZ-pX)/pX
             if char > best_char
                 best = j
-                best_char = char
+                if search
+                    best_char = char
+                else
+                    break
+                end
             end
             swap!(X, t, j)
             swap!(Z, t, j)
@@ -81,56 +129,15 @@ function find_subset(A, b, k)
             index = indexin(best, T)[1]
         end
         push!(T, best)
-        swap!(X, t, best)
-        swap!(Z, t, best)
-        X[t+1:n, t+1:n] -=  X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t]
-        Z[t+1:n, t+1:n] -=  Z[t+1:n, t:t]*Z[t:t, t+1:n]/Z[t,t]
+        if search
+            swap!(X, t, best)
+            swap!(Z, t, best)
+        end
+        X[t+1:n, t+1:n] -= X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t]
+        Z[t+1:n, t+1:n] -= Z[t+1:n, t:t]*Z[t:t, t+1:n]/Z[t,t]
     end
 
     return T
 end
-
-n = 1000
-k = 5
-println(find_subset(Symmetric(Matrix(I, n, n)), [1. for i=1:n], k))
-
-"""
-Diagonalize the matrix, and then compute the elementary symmetric polynomials of the matrix
-"""
-function char_coeff_eigen(X, k::Int64)
-    e = eigvals(Symmetric(X))
-    n = length(e)
-    # Dynamic programming table. 
-    # e_k^n = e_k^n + xn e_{k-1}^{n-1}
-    dp_table = zeros(n+1, k)
-    @inbounds for j=2:n+1
-        dp_table[j, 1] = dp_table[j-1, 1] + e[j-1]
-    end
-    @inbounds for i=2:k
-        @inbounds for j=2:n+1
-            dp_table[j,i] = dp_table[j-1, i] + e[j-1] * dp_table[j-1,i-1]
-        end
-    end
-    dp_table[n+1,k]
-end
-
-##X = Symmetric(Matrix(I, 10000, 10000))
-## Warm up JIT
-#X1 = Symmetric(rand(Float64, (2000,2000)))
-#
-#println(char_coeff_eigen(X1, 10))
-#println(char_coeff_FL(X1, 10))
-#
-#t1 = 0
-#t2 = 0
-#for i=1:100
-#    X = Symmetric(rand(Float64, (1000,1000)))
-#    #X = Symmetric(Matrix(I, 1000, 1000))
-#
-#    stat = @timed println(char_coeff_eigen(X, 10))
-#    global t1 += stat.time
-#    stat = @timed println(char_coeff_FL(X, 10)/factorial(10))
-#    global t2 += stat.time
-#end
-#println(t1)
-#println(t2)
+#@time (for i=1:100; find_subset(rand(10000, 100), rand(10000), 10, false); end)
+@time (for i=1:100; find_subset(rand(10000, 100), rand(10000), 10, true); end)
