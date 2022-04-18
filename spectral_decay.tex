@@ -1,0 +1,503 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=.8in]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr, multicol}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{float}
+\fancyhead[L]{\LARGE{Kevin Shu}}
+\fancyhead[C] {\LARGE{Sparse Linear Regression with Spectral Decay}}
+\fancyhead[R]{\LARGE{}}
+
+\author{Kevin Shu}
+\title{Sparse Linear Regression with Hyperbolic Optimization}
+
+%Set up fancy headers.
+\pagestyle{fancy}
+\usepackage{amsmath, amsthm, amsfonts, amssymb}
+\usepackage[parfill]{parskip}
+
+%Define theorem formatting
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+% Declare some common abbreviations
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\ksets}{\binom{[n]}{k}}
+\newcommand{\Hom}{\textbf{\text{Hom}}}
+\newcommand{\PP}{\textbf{P}}
+\newcommand{\SPACE}{\textbf{SPACE}}
+\newcommand{\NP}{\textbf{NP}}
+\newcommand{\SAT}{\textbf{SAT}}
+\newcommand{\pard}[2]{\frac{\partial #1}{\partial #2}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\tr}{tr}
+\DeclareMathOperator*{\supp}{supp}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\st}{{\text{ s.t. }}}
+
+\begin{document}
+The sparse linear regression problem is
+\[
+    \min \|A x - b\|^2 \text{ where }\|x\|_0 \le k
+\]
+This is equivalent to the following conic optimization problem:
+\begin{equation}\label{eq:tight}
+    \alpha_k(A, b) = 
+    \|b\|^2 - \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in S^{n}_k\}
+\end{equation}
+We define the hyperbolic relaxation
+\begin{equation}\label{eq:relax}
+    \eta_k(A, b) = 
+    \|b\|^2 - \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in H^{n}_k\}
+\end{equation}
+\section{Summary of Results}
+We can find a closed form for $\eta_k(A,b)$.
+\begin{lemma}
+    \[
+        \eta_k(A, b) = \|b\|^2 - \frac{b^{\intercal} A\nabla c_k^n(A^{\intercal}A)A^{\intercal} A^{\intercal}b}{c_k^n(A^{\intercal}A)}.
+    \]
+\end{lemma}
+
+We can find an exact expression for $\alpha_k$ in terms of diagonal rescaling and $\eta_k$.
+\begin{lemma}
+\[\alpha_k(A, b) =  \min \{ \eta_k(AD, b) : {D \text{ is PSD and diagonal}}\}.\]
+\end{lemma}
+
+We can compute $\eta_k(A,b)$ efficiently.
+\begin{lemma}
+    The quantity $\eta_k(A, b)$ can be computed in $O(kn^{\omega})$ time.
+\end{lemma}
+
+We can find a subset whose linear regression error matches this upper bound bound efficiently.
+\begin{lemma}
+    We can find $S \subseteq [n]$ with $\alpha_k(A|_S, b) \ge \eta_k(A, b)$ in at most $O(k^2n^{1+\omega})$ time.
+\end{lemma}
+
+We can recover a primal solution from a dual solution.
+\begin{lemma}
+    Let $y^*$ be a minimizer in 
+\[
+    \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in H^n_k\},
+\]
+and let $Y^* = A^{\intercal}A y^* - A^{\intercal}bb^{\intercal}A$.
+
+Then $X^* = \frac{\nabla c_k^n(Y)}{\tr(AA^{\intercal}\nabla c_k^n(Y))}$ is an optimal solution for the primal problem
+\[
+    \max \{\tr(A^{\intercal}bb^{\intercal}A X) : \tr(AA^{\intercal} X) = 1, \; X \in H^n_k^*\}.
+\]
+
+Given the value of $y^*$, $X^*$ can be computed in $O(n^{\omega} + n^2k)$ time.
+\end{lemma}
+
+
+We will say that $A$ exhibits $(\epsilon, k)$-spectral decay if $\epsilon \sigma_{k}(A) \ge \sigma_{k+1}(A)$.
+Let $\ell_k(A,b)$ be the error incurred by regressing $b$ against the top $k$ singular vectors of $A$. We define these terms precisely below.
+
+\begin{lemma}
+    If $A$ exhibits $(\epsilon, k)$ spectral decay, then for all $b$, we have that 
+    \[
+        \alpha_k(A, b) \le (1-\frac{1}{(1+\epsilon^2)^{nk}}) \|b\|^2 + \frac{1}{(1+\epsilon^2)^{nk}}\ell_k(A, b).
+    \]
+\end{lemma}
+
+
+\section{Closed Form for Hyperbolic Optimization}
+Much in the same way that we have a closed form solution for the optimizer for linear regression, we can actually obtain a closed form solution for $\eta_k(A, b)$ in terms of the characteristic coefficient $c_k^n(A^{\intercal}A)$.
+\begin{lemma}
+    \[
+        \eta_k(A, b) = \|b\|^2 - \frac{b^{\intercal} A\nabla c_k^n(A^{\intercal}A)A^{\intercal} A^{\intercal}b}{c_k^n(A^{\intercal}A)}.
+    \]
+\end{lemma}
+\begin{proof}
+    For convenience, let $v = A^{\intercal}b$.
+
+    It is clear that at the smallest possible $y$ so that $A^{\intercal}Ay - vv^{\intercal} \in H^n_k$, we have that 
+    \[
+        c_k^n(A^{\intercal}Ay - vv^{\intercal}) = 0.
+    \]
+    The ``matrix determinant lemma'', which states that $\det(X - vv^{\intercal}) = (1-v^{\intercal}X^{-1}v)\det(X)$, immediately implies
+    \begin{align*}
+        c_k^n(A^{\intercal}Ay - vv^{\intercal}) &= \sum_{S \subseteq [n] : |S| = k}(1-\frac{v^{\intercal}|_S(A^{\intercal}A)|_S^{-1}v|_S}{y})\det(A^{\intercal}A|_S)y^k\\
+                                              &= c_k^n(A^{\intercal}A)y^k - v^{\intercal}\nabla c_k^n(A^{\intercal}A) vy^{k-1}
+    \end{align*}
+    The only nonzero root of this polynomial is
+    \[
+        y = \frac{v^{\intercal}\nabla c_k^n(A^{\intercal}A) v}{c_k^n(A^{\intercal}A)}
+    \]
+
+    This must then be the minimizer of this expression, and so 
+    \[
+        \eta_k(A, b) = \|b\|^2 - y
+    \]
+\end{proof}
+Notice that when $k = n$, this is equivalent to the closed form for the linear regression objective.
+
+As a note, we can upgrade this result to an exact equality using diagonal congruence.
+\begin{lemma}
+\[\alpha_k(A, b) =  \min \{ \eta_k(AD, b) : {D \text{ is PSD and diagonal}}\}.\]
+\end{lemma}
+\begin{proof}
+    Let $S \subseteq [n]$ so that $S = \supp x^*$ where $x^*$ is the optimal regressor in the sparse linear regression problem, and $\supp x^*$ denotes the set of nonzero entries of $x^*$. 
+
+    We then have for the closed form for the linear regression problem that $x^* = (A^{\intercal}A|_S)^{-1}(A|_Sb|_S)$.
+
+    Let $D$ be the diagonal matrix so that  $D_{ii} = 1_{i \in S}$. Then $c_k^n(DA) = \det(A|_S)$, and
+    \begin{align*}
+        \|b\|^2 - \alpha_k(AD, b) &= \|b\|^2 - \frac{b^{\intercal}A|_S\nabla c_k^n(A^{\intercal}A|_S) A|_S^{\intercal}b}{c_k^n(A^{\intercal}A|_S)}\\
+                                                                                                                            &= \|b\|^2 - (A|_S^{\intercal}b)^{\intercal}(A^{\intercal}A|_S)^{-1} (A|_S^{\intercal}b)\\
+                                                                                                                            &= \|b\|^2 - x^*A^{\intercal}Ax^*,
+    \end{align*}
+    which is the linear regression error for $x^*$.
+\end{proof}
+\subsection{Connection to Determinantal Point Processes}
+We consider a random subset $S \subseteq pn[$ chosen so that $|S| = k$,
+\[
+    \Pr(S) \propto \det(A^{\intercal}A|_S).
+\]
+This is known as a truncated determinantal point process, and it is known that it is possible to sample from this distribution using Markov Chain Monte Carlo techniques.
+
+\begin{lemma}
+    \[
+        \eta_k(A, b) = \E[\alpha_k(A|_S, b)].
+    \]
+\end{lemma}
+\begin{proof}
+    We have that for any set $S$, the probability of set $S$ appearing is precisely
+    \[
+        \frac{\det(A^{\intercal}A|_S)}{\sum_{S \in \ksets} \det(A^{\intercal}A|_S)} = \frac{\det(A^{\intercal}A|_S))}{c_k^n(A^{\intercal}A)}
+    \]
+    We also have from the closed form for the linear regression problem that
+    \[
+        \alpha_k(A|_S,b) = \|b\|^2 - b^{\intercal}A|_S(A^{\intercal}A)|_S^{-1}A|_S^{\intercal}b.
+    \]
+    Therefore,
+    \begin{align*}
+        \E[\alpha_k(A|_S,b)] &= \|b\|^2 - \sum_{S \in \ksets} \frac{\det(A^{\intercal}A)}{c_k^n(A^{\intercal}A)}A|_Sb^{\intercal}A|_S(A^{\intercal}A)|_S^{-1}A|_S^{\intercal}b\\
+                             &= \|b\|^2 - b^{\intercal}A|_S\left( \sum_{S \in \ksets} \frac{\nabla \det(A^{\intercal}A|_S)}{c_k^n(A^{\intercal}A)} \right)A|_S^{\intercal}b\\
+                             &= \|b\|^2 - \frac{b^{\intercal}\nabla c_k^n(A^{\intercal}A|_S)A|_S^{\intercal}b}{c_k^n(A^{\intercal}A)}
+    \end{align*}
+
+
+
+    Therefore,
+    \[
+        \alpha_k(A|_S,b) = \|b\|^2 - b^{\intercal}A|_S(A^{\intercal}A)|_S^{-1}A|_S^{\intercal}b
+    \]
+\end{proof}
+
+\section{Algorithmic Questions}
+\begin{lemma}
+    The quantity $\eta_k(A, b)$ can be computed in $O(kn^{\omega})$ time.
+\end{lemma}
+\begin{proof}
+    Recall that 
+    \[
+        c_k^n(A^{\intercal}Ay - vv^{\intercal}) = c_k^n(A^{\intercal}A)y^k - v^{\intercal}\nabla c_k^n(A^{\intercal}A) v y^{k-1}
+    \]
+    We first claim that given a matrix $X$, we can compute $c_k^n(X)$ in $kn^{\omega}$ time.
+
+    To compute $c_k^n(X)$, we can apply the Faddeev–LeVerrier algorithm, which states that
+    \[
+        c_k^n(X) = \frac{(-1)^{k}}{k!} \det(Y),
+    \]
+    where $Y$ is the $k\times k$ matrix given by 
+    \[
+        Y =
+        \begin{pmatrix}
+            \tr A & m-1 & 0 & \dots\\
+            \tr A^2 & \tr A & m - 2 & 0 & \dots\\
+            \vdots & \vdots & & & \vdots\\
+            \tr A^{k-1} & \tr A^{k-2} & \dots & \dots & 1\\
+            \tr A^k & \tr A^{m-1} & \dots & \dots & \tr A
+        \end{pmatrix}.
+    \]
+
+    The $A^i$ can be computed using $O(n^{\omega})$ operations each, and the determinant of $Y$ can be computed in $O(k^{\omega})$ time.
+
+    Now, it is clear that we can compute $c_k^n(A^{\intercal}A)$ in $O(kn^{\omega})$ time, and also
+    \[
+        v^{\intercal}\nabla c_k^n(A^{\intercal}A) v = c_k^n(A^{\intercal}A) - c_k^n(A^{\intercal}A - vv^{\intercal})
+    \]
+    So, we can compute these two quantities in $O(kn^{\omega})$ time, and then compute their ratio in $O(1)$ time.
+\end{proof}
+\begin{remark}
+    The Fadeev-Leverrier algorithm is famously numerically unstable, though for small $k$, its performance is acceptable. On the other hand, it is also possible to compute the $c_k^n(X)$ in a numerically stable way by noting that 
+    \[
+        \det(X + t I) = \sum_{i=0}^n c_k^n(X)t^i.
+    \]
+    By evaluating the determinant of $X+tI$ at $n$ distinct values of $t$, and then interpolating to find the coefficients of this characteristic polynomial, we are able to compute the characteristic polynomial in $n^{\omega+1}$ time in a numerically stable way.
+\end{remark}
+\subsection{Finding A Primal Solution}
+If we have an optimum for the dual problem
+\[
+    \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in H^n_k\},
+\]
+how can we extract from this a primal optimum solution? 
+
+\begin{lemma}
+    Let $y^*$ be a minimizer in 
+\[
+    \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in H^n_k\},
+\]
+and let $Y^* = A^{\intercal}A y^* - A^{\intercal}bb^{\intercal}A$.
+
+Then $X^* = \frac{\nabla c_k^n(Y)}{\tr(AA^{\intercal}\nabla c_k^n(Y))}$ is an optimal solution for the primal problem
+\[
+    \max \{\tr(A^{\intercal}bb^{\intercal}A X) : \tr(AA^{\intercal} X) = 1, \; X \in H^n_k^*\}.
+\]
+Given the value of $y^*$, $X^*$ can be computed in $O(n^{\omega} + n^2k)$ time.
+\end{lemma}
+\begin{proof}
+    It is clear that $A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in \parital H^n_k$, and it is a general fact that if $Y \in \partial H^n_k$, then $\nabla c_k^n(Y) \in H^n_k^*$, and $\langle \nabla c_k^n(Y), Y \rangle = 0$.
+    Also, by our choice of normalization, $X^*$ also satisfies $\tr(AA^{\intercal}X^*) = 1$, so it is feasible.
+
+    Hence, by complementary slackness, $X^*$ is a primal optimal.
+
+    If we let $Y^* = UDU^{\intercal}$ be the diagonalization of $Y^*$, then $\nabla c_k^n(Y^*) = U\nabla c_k^n(D)U^{\intercal}$.
+    The diagonalization of $Y^*$ can be computed in $O(n^{\omega})$ time.
+    
+    $\nabla c_k^n(D) $ is a diagonal matrix, where
+    \[
+        \nabla c_k^n(D)_{ii} = e_{k-1}^{n-1}(D_{11}, \dots, \hat{D}_{ii}, \dots, D_{nn}),
+    \]
+    where $\hat{D}_{ii}$ denotes the fact that $D_{ii}$ is removed from this list of arguments.
+    
+    Each $e_{k-1}^{n-1}$ can be computed in $O(nk)$ time for each coefficient, so that the total time required to compute $\nabla c_k^n(D)$ in $n^2k$ time.
+
+\end{proof}
+Now, we know that $H^n_k^* \subseteq FW^n_k$, so that there are $x_1, \dots, x_m$ so that $\|x_i\|_0 \le k$, and
+\[
+    X^* = \sum_{i=1}^m x_ix_i^{\intercal}.
+\]
+By general convex geometry, there must be some $i$ so that $x_i$ acheives a small primal objective.
+
+While this guarantees a theoretical lower bound on the quality of some sparse solution, we do not know how to find this decomposition computationally.
+
+\subsection{Polytime algorithm for getting sparse regressor}
+In practice, heurstic methods for finding this decomposition of $X$ may lead to fast algorithms.
+Here, we give a polytime algorithm for finding a set $S$ that matches the lower bound given by the hyperbolic relaxation, that is, so that $\alpha_k(A|_S, b) \ge \eta_k(A, b)$.
+
+To do this, we need to define some more hyperbolic polynomials. For $T \subseteq S$ with  $|T| \le k$, let
+\[
+    c_{T,k}^n(X) = \sum_{S\in \ksets : T \subseteq S} \det(X|_S).
+\]
+In particular, $c_{\varnothing, k}^n = c_k^n$, and $c_{T, |T|}^n = \det(X|_T)$.
+
+It is a general fact that $c_{T,k}^n$ is hyperbolic with respect to any PSD matrix.
+So, we can let $H_{T, k}^n = \Lambda(c_{T,k}^n)$ be the hyperbolicity cone of $c_{T,k}^n$ containing the PSD cone.
+
+As above, we let $\eta_{T, k}(A,b) = \min \{y : A^{\intercal}A y - A^{\intercal}bb^{\intercal}A \in H^{T,n}_k\}$.
+
+We can actually reproduce most of the results above about $c_k^n$ in this more general setting.
+
+\begin{lemma}
+    \[\eta_{T,k}(A,b) = \|b\|^2 - \frac{b^{\intercal}A\nabla c_{T,k}^n(A^{\intercal}A)A^{\intercal}b}{c_{T,k}^n(A^{\intercal}A)}.\]
+\end{{lemma}
+\begin{proof}
+    As above, we know that at an optimum for $\eta_{T,k}(A,b)$
+    \[c_{T,k}^n(A^{\intercal}A y - A^{\intercal}bb^{\intercal}A) = 0.\]
+
+    Because $A^{\intercal}bb^{\intercal}A$ is rank 1, this polynomial still has a zero of order $k-1$ at 0, and the result follows from examining the two nonzero coefficients of this polynomial.
+\end{proof}
+
+\begin{lemma}
+    The quantity $\eta_{T,k}(A, b)$ can be computed in $O(kn^{\omega})$ time.
+\end{{lemma}
+\begin{proof}
+    As above, it suffices to compute $c_{T,k}^n(X)$ in this much time.
+
+    To do this, we use the Schur complement lemma that if $T \subseteq S$, then
+    \[
+        \det(X|_S) = \det(X|_T) \det((X \setminus T)|_{S\setminus T}),
+    \]
+    where $X \setminus T$ is the Schur complement 
+    \[
+        X|_{[n]-T} - X|_{T, [n]-T}X|_T^{-1}X|_{[n]-T, T}.
+    \]
+
+    We see then that 
+    \[
+        c_{T,k}^n(X) = \det(X|_T) c_{k-|T|}^n(X \setminus T).
+    \]
+    This can be computed in $O(kn^{\omega})$ time.
+\end{proof}
+\begin{lemma}
+    For any $T \subseteq [n]$ with $|T| \le k$, there is some $i \not \in T$ so that 
+    \[
+        \eta_{T, k}(A,b) \ge \eta_{T+i, k}(A,b)
+    \]
+\end{lemma}
+\begin{proof}
+
+    These polynomials satisfy the relation that 
+    \[
+        c_{T,k}^n(X) = \frac{1}{n-|T|} \sum_{i \not \in T} c_{T+i, k}^n(X).
+    \]
+
+    Therefore, if for some $y$,
+    \[
+        c_{T,k}^n(A^{\intercal}A y - A^{\intercal}bb^{\intercal}A) = 0.
+    \]
+
+    Then there must be some $i \not \in T$ so that 
+    \[
+        c_{T+i,k}^n(A^{\intercal}A y - A^{\intercal}bb^{\intercal}A) \le 0.
+    \]
+    Now, for this choice of $i$, consider
+    \[
+        \lim_{y \rightarrow \infty} c_{T+i,k}^n(A^{\intercal}A y - A^{\intercal}bb^{\intercal}A) = \infty.
+    \]
+    Therefore, by the intermediate value theorem, for some $y' \ge y$, we must have
+    \[
+        c_{T+i,k}^n(A^{\intercal}A y' - A^{\intercal}bb^{\intercal}A) = 0.
+    \]
+    We have seen that this polynomial $c_{T+i,k}^n$ has at most one nonzero root, and so, we see that 
+    \[
+        \eta_{T, k}(A,b) \ge \eta_{T+i, k}(A,b).
+    \]
+\end{proof}
+\begin{lemma}
+    We can find $S \subseteq [n]$ with $\alpha_k(A|_S, b) \ge \eta_k(A, b)$ in at most $O(k^2n^{1+\omega})$ time.
+\end{lemma}
+\begin{proof}
+    We do this iteratively. We maintain a set $T$, which starts as $\varnothing$, and we will maintain the invariant that $\eta_{T, k}(A, b) \ge \eta_k(A,b)$.
+
+    We then procede with rounds of computation.
+
+    If at the start of a round, $|T| = k$, then we output $T$. Clearly, this output will be correct, since
+    \[
+        \alpha_k(A|_T, b) = \eta_{T, k}(A,b) \ge \eta_k(A,b).
+    \]
+
+
+    If $|T| < k$, we continue the round by computing
+    \[
+        \eta_{T+i, k}(A,b)
+    \]
+    for each $i \in [n] \setminus T$. This takes $O(kn^{1+\omega})$ time per round.
+
+    By the previous lemma, we know that there must be some $i$ so that
+    \[
+        \eta_{T+i, k}(A,b) \ge \eta_{T,k}(A,b) \ge \eta_k(A,b),
+    \]
+    and that implies that at the end of each round, we will have found some $i$ so that 
+    \[
+        \eta_{T+i, k}(A,b) \ge \eta_k(A,b).
+    \]
+    We replace $T$ by $T+i$, and procede to the next round of computations.
+
+    We perform at most $k$ rounds of computations, and each round requires $O(kn^{1+\omega})$ time, which implies the claim.
+\end{proof}
+
+
+This procedure suggests a greedy approach to sparse linear regression.
+\begin{algorithm}
+    \caption{A Greedy Algorithm for Sparse Linear Regression}
+    \begin{algorithmic}\label{alg:greedy}
+        \State $T \gets \varnothing$
+        \For{$t = 1 \dots k$}
+            \State $j \gets \argmax \eta_{T+j, k}(A,b)$
+            \State $T \gets T + j$
+        \EndFor
+
+        \Return T
+    \end{algorithmic}
+\end{algorithm}
+Presumably this can be incorporated into some kind of branch and bound framework.
+
+
+\section{Sparse Linear Regression with Spectral Decay}
+Let the singular value decomposition of $A$ be 
+\[
+    A = U\Sigma V
+\]
+where $U$ and $V$ are orthogonal, and $\Sigma$ is diagonal, where $\Sigma_{ii}  = \sigma_i(A)$, and $\sigma_1(A) \ge \sigma_2(A) \dots $.
+
+The PCA problem is to find the $k$ largest singular values of $A$, and the corresponding $k$ singular directions, $v_1, \dots, v_k$.
+A common property of real world data matrices is that $\sigma_i(A)$ is very small for $i$ much smaller than $n$, so that $A$ is actually well approximated by the first $k < n$ singular vectors.
+
+We define the spectral sparsification of $A$ to be 
+\[
+    A^{(k)} = U\Sigma^{(k)}V
+\]
+Here, $\Sigma^{(k)}$ is obtained by setting all but the first $k$ columns of $\Sigma$ to 0.
+
+For $b \in \R^m$, we define
+\[
+    \ell_k(A, b) = \min \{ \|b\|^2 - x^{\intercal} A^{(k)}^{\intercal}b b^{\intercal}A^{(k)}x : x \in \R^n\} =  \|b\|^2 - (b^{\intercal} U)|_{[k]}(U^{\intercal}b)|_{[k]}
+\]
+That is, we use the spectral sparsification of $A$ to perform linear regression on $b$.
+
+We will say that $A$ exhibits $(\epsilon, k)$-spectral decay if $\epsilon \sigma_{k}(A) \ge \sigma_{k+1}(A)$.
+
+\begin{lemma}
+    If $A$ exhibits $(\epsilon, k)$ spectral decay, then for all $b$, we have that 
+    \[
+        \alpha_k(A, b) \le (1-\frac{1}{(1+\epsilon^2)^{nk}}) \|b\|^2 + \frac{1}{(1+\epsilon^2)^{nk}}\ell_k(A, b).
+    \]
+\end{lemma}
+\begin{proof}
+    We recall that 
+    \[
+        \alpha \le \|b\|^2 - \frac{(Ab)^{\intercal} \nabla c_k(A^{\intercal}A) (Ab)}{c_k(A^{\intercal}A)}.
+    \]
+    Recall that $c_k$ is basis invariant, so that 
+    \begin{align*}
+        \frac{b^{\intercal}A \nabla c_k(A^{\intercal}A) A^{\intercal}b}{c_k(A^{\intercal}A)} &= 
+        \frac{(U\Sigma V b)^{\intercal} \nabla c_k(V^{\intercal}\Sigma^2V) (AU\Sigma Vb)}{c_k^n(\Sigma^2)}\\
+                                                                                     &=\frac{b^{\intercal} U\Sigma \nabla c_k^n(\Sigma^2) \Sigma U^{\intercal}b}{c_k^n(\Sigma^2)}
+    \end{align*}
+
+    \[
+        \nabla c_k^n(\Sigma^2) = \sum_{S \in \ksets} \det(\Sigma|_S)^2 \Sigma|_S^{-2}
+    \]
+    Now, $\Sigma|_S^2$ is PSD for every $S \in \ksets$, we see that 
+    \[
+        \nabla c_k^n(\Sigma^2) \succeq \det(\Sigma|_{[k]})^2 \Sigma|_{[k]}^{-2},
+    \]
+    and so we obtain 
+
+    \[
+        \frac{b^{\intercal}A \nabla c_k^n(A^{\intercal}A) A^{\intercal}b}{c_k^n(A^{\intercal}A)} \ge 
+        \frac{\det(\Sigma|_{[k]})^2}{c_k^n(\Sigma^2)}(b^{\intercal}U)|_{[k]}(U^{\intercal}b)|_{[k]} = 
+        \frac{\det(\Sigma|_{[k]})^2}{c_k^n(\Sigma^2)}(\|b\|^2 - \ell_k(A,b)).
+    \]
+    To show the result, it remains to show that if $A$ has $(\epsilon, k)$ spectral decay, then
+    \[
+        \frac{\det(\Sigma|_{[k]})^2}{c_k^n(\Sigma^2)} \le \frac{1}{(1+\epsilon)^{nk}},
+    \]
+    or equivalently,
+    \[
+        \frac{c_k^n(\Sigma^2)}{\det(\Sigma|_{[k]})^2} \le (1+\epsilon)^{nk},
+    \]
+    We expand $c_k^n$ out as a sum over $S \in \ksets$, and reindex the summation to be over $|S \Delta [k]|$ first.
+    \begin{align*}
+        c_k^n(\Sigma^2) = \sum_{\ell = 0}^k\sum_{S \in \ksets : |S \Delta [k]| = \ell} \prod_{i\in S}\sigma_i^2
+    \end{align*}
+
+    Now, notice that if $|S\Delta [k]| = \ell$, then $\prod_{i\in S}\sigma_i^2 \le \epsilon^{2\ell}\prod_{i=1}^k \sigma_i^2$.
+    There are $\binom{k}{\ell} \binom{n}{\ell}$ sets with the property that $|S\Delta [k]|$, so that 
+    \[
+        c_k^n(\Sigma^2) \le \prod_{i=1}^k \sigma_i^2 \left(\sum_{\ell=0}^k\epsilon^{2\ell}\binom{k}{\ell} \binom{n}{\ell}\right)
+    \]
+
+    Now, we note that 
+    \[
+        \binom{k}{\ell} \binom{n}{\ell} \le \binom{nk}{\ell},
+    \]
+    which follows from simply expanding out both sides.
+
+    Therefore, 
+    \[
+        c_k^n(\Sigma^2) \le \prod_{i=1}^k \sigma_i^2 \left(\sum_{\ell=0}^{nk}\epsilon^{2\ell}\binom{nk}{\ell}\right) = \det(\Sigma|_{[k]}^2) (1+\epsilon^2)^{nk}.
+    \]
+    This gives the desired result. 
+\end{proof}
+
+\end{document}
