@@ -42,7 +42,7 @@ function swap!(X::AbstractMatrix, i::Integer, j::Integer)
 end
 
 function conditional_char(X, t, k, n)
-    det(X[1:t,1:t]) * char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, 1:t]*inv(X[1:t,1:t])*X[1:t, t+1:n], k-t)
+    X[t,t] * char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t], k-t)
 end
 
 function find_subset(A, b, k)
@@ -83,12 +83,16 @@ function find_subset(A, b, k)
         push!(T, best)
         swap!(X, t, best)
         swap!(Z, t, best)
+        X[t+1:n, t+1:n] -=  X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t]
+        Z[t+1:n, t+1:n] -=  Z[t+1:n, t:t]*Z[t:t, t+1:n]/Z[t,t]
     end
 
     return T
 end
 
-println(find_subset(Symmetric(Matrix(I, 100, 100)), [1 for i=1:100], 5))
+n = 1000
+k = 5
+println(find_subset(Symmetric(Matrix(I, n, n)), [1. for i=1:n], k))
 
 """
 Diagonalize the matrix, and then compute the elementary symmetric polynomials of the matrix
