@@ -5,10 +5,21 @@ using Profile
 
     Compute the degree k characteristic coefficients of the matrix X.
     uses Faddeev LeVerrier method.
+    
+    Has the option of sketching the matrix first, where we replace X by
+    OXO^T for O a d x n Gaussian matrix, for some d < n
 
     Faster for n = 1000, k = 10
+
+    to_sketch: if true, first sketch the matrix before computing these values.
 """
-function char_coeff_FL(X, k::Int64)
+function char_coeff_FL(X, k::Int64; to_sketch::Bool=false)
+    if to_sketch
+        d = choose_dimension(X, k)
+        dis = Normal()
+        O = rand(dis, d, n)
+        X = O*X*transpose(O) / d
+    end
     powers = [X]
     half_k = (k÷2)
     for i=1:half_k
@@ -42,8 +53,10 @@ function swap!(X::AbstractMatrix, i::Integer, j::Integer)
     end
 end
 
-function conditional_char(X, t, k, n)
-    X[t,t] * char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t], k-t)
+function conditional_char(X, t, k, n; to_sketch=false)
+    X[t,t] *
+    char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t], k-t,
+                 to_sketch=to_sketch)
 end
 
 """
@@ -78,8 +91,8 @@ search: If this is true, find the best element to add to T in each round.
 If false, find the first element that does at least as well as char_coeff_FL(X)
 verbose: If this is true, print out the scores over time.
 """
-function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64, 
-                    search::Bool=true, verbose::Bool=false)
+function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64; 
+        search::Bool=true, verbose::Bool=false, to_sketch::Bool=false)
     n = size(A,2)
     # Features selected
     T = [] 
@@ -89,8 +102,8 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64,
     Z = X + (transpose(A)*b*transpose(b)*A)
 
     if !search
-        pX = char_coeff_FL(X, k)
-        pZ = char_coeff_FL(Z, k)
+        pX = char_coeff_FL(X, k, to_sketch=to_sketch)
+        pZ = char_coeff_FL(Z, k, to_sketch=to_sketch)
         best_char = (pZ-pX)/pX
     end
     for t=1:k
@@ -108,8 +121,8 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64,
                 swap!(X, t, j)
                 swap!(Z, t, j)
             end
-            pX = conditional_char(X, t, k, n)
-            pZ = conditional_char(Z, t, k, n)
+            pX = conditional_char(X, t, k, n, to_sketch=to_sketch)
+            pZ = conditional_char(Z, t, k, n, to_sketch=to_sketch)
             char = (pZ-pX)/pX
             if char > best_char
                 best = j
@@ -139,5 +152,31 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64,
 
     return T
 end
-#@time (for i=1:100; find_subset(rand(10000, 100), rand(10000), 10, false); end)
-@time (for i=1:100; find_subset(rand(10000, 100), rand(10000), 10, true); end)
+
+function linear_regression_objective(A, b)
+    temp = transpose(A) * b
+    dot(b,b) - dot(temp, inv(transpose(A) * A) * temp)
+end
+
+function opt2linreg(A,b)
+    m = size(A,1)
+    n = size(A,2)
+    best = dot(b,b)
+    for i in 1:n
+        for j in i+1:n
+            best = max(best,
+                       linear_regression_objective(A[:, [k == i || k==j for k=1:n]],
+                                                   b))
+        end
+    end
+    best
+end
+n = 10
+m = 100
+A = rand(m,n)
+b = [1. for i=1:m]
+
+println(opt2linreg(A, b))
+
+x = find_subset(A, b, 2)
+println(linear_regression_objective(A[:, [k in x for k=1:n]], b))
