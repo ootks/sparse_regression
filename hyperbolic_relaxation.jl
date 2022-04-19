@@ -1,5 +1,5 @@
-using LinearAlgebra
-using Profile
+using LinearAlgebra, Profile, Distributions, Random
+using StatsBase: sample
 """
     char_coeffs(X, k)
 
@@ -13,11 +13,18 @@ using Profile
 
     to_sketch: if true, first sketch the matrix before computing these values.
 """
-function char_coeff_FL(X, k::Int64; to_sketch::Bool=false)
+function char_coeff_FL(X::Symmetric{Float64, Matrix{Float64}},
+                       k::Int64; to_sketch::Bool=false)
+    if k == 0
+        return 1
+    end
+    if k == 1
+        return tr(X)
+    end
     if to_sketch
         d = choose_dimension(X, k)
         dis = Normal()
-        O = rand(dis, d, n)
+        O = rand(dis, n, d)
         X = O*X*transpose(O) / d
     end
     powers = [X]
@@ -32,6 +39,13 @@ function char_coeff_FL(X, k::Int64; to_sketch::Bool=false)
     end
 
     det([fl_matrix_entry(i, j, traces) for i=1:k, j=1:k])
+end
+
+function choose_dimension(X,k)
+    if k == 2
+        10*log(size(X,1))
+    end
+    trunc(Int64, 3*size(X,1)^(1-2/k))
 end
 
 function fl_matrix_entry(i::Int64, j::Int64, l::Vector)
@@ -53,10 +67,11 @@ function swap!(X::AbstractMatrix, i::Integer, j::Integer)
     end
 end
 
-function conditional_char(X, t, k, n; to_sketch=false)
-    X[t,t] *
-    char_coeff_FL(X[t+1:n,t+1:n] - X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t], k-t,
-                 to_sketch=to_sketch)
+function conditional_char(X::Symmetric{Float64, Matrix{Float64}}, t, k, n;
+        to_sketch=false)
+    schur = X[t+1:n,t+1:n] - X[t+1:n, 1:t]*inv(X[1:t,1:t])*X[1:t, t+1:n]
+    det(X[1:t,1:t]) *
+    char_coeff_FL(Symmetric(schur), k-t, to_sketch=to_sketch)
 end
 
 """
@@ -96,14 +111,12 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64;
     n = size(A,2)
     # Features selected
     T = [] 
-    # Maintain X = A^T A \ T, where \ denotes the schur complement
     X = transpose(A)*A
-    # Maintain Z = (A^T A + A^Tbb^TA) \ T
     Z = X + (transpose(A)*b*transpose(b)*A)
 
     if !search
-        pX = char_coeff_FL(X, k, to_sketch=to_sketch)
-        pZ = char_coeff_FL(Z, k, to_sketch=to_sketch)
+        pX = char_coeff_FL(Symmetric(X), k, to_sketch=to_sketch)
+        pZ = char_coeff_FL(Symmetric(Z), k, to_sketch=to_sketch)
         best_char = (pZ-pX)/pX
     end
     for t=1:k
@@ -121,8 +134,8 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64;
                 swap!(X, t, j)
                 swap!(Z, t, j)
             end
-            pX = conditional_char(X, t, k, n, to_sketch=to_sketch)
-            pZ = conditional_char(Z, t, k, n, to_sketch=to_sketch)
+            pX = conditional_char(Symmetric(X), t, k, n, to_sketch=to_sketch)
+            pZ = conditional_char(Symmetric(Z), t, k, n, to_sketch=to_sketch)
             char = (pZ-pX)/pX
             if char > best_char
                 best = j
@@ -146,8 +159,6 @@ function find_subset(A::Matrix{Float64}, b::Array{Float64}, k::Int64;
             swap!(X, t, best)
             swap!(Z, t, best)
         end
-        X[t+1:n, t+1:n] -= X[t+1:n, t:t]*X[t:t, t+1:n]/X[t,t]
-        Z[t+1:n, t+1:n] -= Z[t+1:n, t:t]*Z[t:t, t+1:n]/Z[t,t]
     end
 
     return T
@@ -164,19 +175,46 @@ function opt2linreg(A,b)
     best = dot(b,b)
     for i in 1:n
         for j in i+1:n
-            best = max(best,
+            best = min(best,
                        linear_regression_objective(A[:, [k == i || k==j for k=1:n]],
                                                    b))
         end
     end
     best
 end
-n = 10
-m = 100
-A = rand(m,n)
-b = [1. for i=1:m]
 
-println(opt2linreg(A, b))
+n = 1000
+m = 10000
+niters = 30
+for k in 2:5
+    open("planted_trials", "a") do io
+        found = 0
+        println(io, "===============")
+        println(io, "Starting round ",k)
+        println(io, "===============")
+        for trial in 1:niters
+            A = rand(m,n)
+            b = rand(m)
+            planted = sample([i for i=1:n], k, replace=false)
+            println(io, planted)
 
-x = find_subset(A, b, 2)
-println(linear_regression_objective(A[:, [k in x for k=1:n]], b))
+            for i in 1:m
+                A[i,planted[1]] = b[i] - sum(A[i,planted[l]] for l in 2:k)
+            end
+
+            x = find_subset(A, b, 5)
+            println(io, x)
+            println(io, linear_regression_objective(A[:, [k in x for k=1:n]], b))
+            if all([l in x for l in planted])
+                println(io, "Found!")
+                found += 1
+            else
+                println(io, "Not Found!")
+            end
+            if mod(trial, 10) == 0
+                println(io, found, " found out of ", trial)
+                println(io, "")
+            end
+        end
+    end
+end
