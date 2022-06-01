@@ -1,0 +1,264 @@
+\documentclass{amsart}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{fullpage}
+\usepackage{xcolor}
+
+\usepackage{hyperref,cleveref,color,verbatim}
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{conj}[theorem]{Conjecture}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{false}[theorem]{False Statement}
+\newtheorem*{theorem*}{Theorem}
+
+\theoremstyle{definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{defi}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\fS}{\mathfrak{S}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\tr}{\textup{tr}}
+\newcommand{\Ad}{\textup{Ad}}
+\newcommand{\GL}{\operatorname{{\mathbf GL}}}
+\newcommand{\gl}{\operatorname{gl}}
+\newcommand{\FW}{\mathcal{F}\mathcal{W}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\M}{\mathcal{M}}
+
+%%%%% debatable notations %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\Def[1]{\emph{#1}}%
+\newcommand\x{{x}}%
+\newcommand\X{{X}}%
+\newcommand\A{{A}}%
+\newcommand\I{{I}}%
+\renewcommand\a{{a}}
+\renewcommand\v{{v}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DeclareMathOperator*{\adj}{adj}
+\DeclareMathOperator*{\Diag}{Diag}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\Block}{B}
+\DeclareMathOperator*{\Adj}{Adj}
+\DeclareMathOperator*{\Span}{span}
+\DeclareMathOperator*{\SO}{SO}
+\DeclareMathOperator*{\supp}{supp}
+\newcommand{\st}{{\text{ s.t. }}}
+\newcommand{\transpose}{\intercal}
+\DeclareMathOperator{\conv}{\operatorname{conv}}
+
+\newcommand*{\Sym}{\R^{n \times n}_{\mathrm{sym}}}
+
+\newcommand{\cL}{{\mathcal L}}
+\newcommand{\De}{\operatorname{D}}
+\newcommand\ks[1]{{\color{green}(Kevin: #1)}}
+
+
+\DeclareMathOperator{\adju}{\operatorname{adj}}
+
+\title{Hyperbolic Relaxations for Semidefinite Programs with Sparsity Constraints}
+\date{\today}
+
+\author{Kevin Shu}
+\address[Kevin Shu]{School of Mathematics, Georgia Institute of Technology, 686 Cherry Street, Atlanta, GA 30332, USA}
+\email{kshu8@gatech.edu}
+
+\thanks{We would like to thank Greg Blekherman, Santanu Dey, Mohit Singh, Shengding Sun, Santosh Vempala for many insightful conversations.}
+
+\begin{document}
+
+\begin{abstract}
+    Semidefinite programs are valuable computational methods for approximating quadratic programs with quadratic constraints.
+    In addition to continuous constraints, it is often of interest to introduce constraints requiring that the final solution have only a certain number of nonzero entries.
+    For instance, both linear regression and the maximum singular value problem can be formulated as quadratic programs, whose semidefinite programming relaxations are tight.
+    The sparse versions of these problems, where the final output vector is required to have at most $k$ nonzero entries are known to be hard to approximate.
+    We introduce a family of tractible convex problems which approximate such sparse semidefinite programs, which arise naturally from the study of hyperbolic polynomials, which have been of recent interest.
+    Our main contributions are formulations of these relaxations and computational methods solving these relaxations.
+    We will give particular attention to the sparse linear regression problem and the sparse principal components analysis problem, obtaining particularly simple and efficient methods for approximating these expressions.
+    We will also give computational evidence that these methods can be effective.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+The main object of interest in this paper optimization over linear slices of the \emph{factor width $k$} cone, which is the convex cone defined as 
+\[
+    \FW^n_k = \conv \{xx^{\intercal} : x \in \R^n, \|x\|_0 \le k\}
+\]
+Here, $\|x\|_0$ denotes the number of nonzero entries of $x$.
+Optimizing over such cones (when $k$ is allowed to vary) can capture problems such as sparse linear regression \cite{TODO} and sparse PCA \cite{TODO}, and as such it is NP-hard.
+
+We will actually be interested in the more general \emph{structured sparse semidefinite cones}, which are parameterized by a collection of subsets $\Delta \subseteq 2^{[n]}$, and are defined as
+\[
+    \M(\Delta) = \conv \{xx^{\intercal} : x \in \R^n, \supp(x) \in \Delta\}.
+\]
+Here, $\supp(x) = \{i \in [n] : x_i \neq 0\}$.
+
+We may equivalently write the factor-width $k$ cone in these terms:
+\[
+    \FW^n_k = \M\left(\binom{[n]}{k}\right),
+\]
+where $\binom{[n]}{k} = \{S \subseteq [n] : |S| = k\}$.
+As can be seen in this example, we will often want to consider $\Delta$ where the size of $\Delta$ grows quickly with $n$ and $k$.
+
+The dual to $\M(\Delta)$ can be seen to be 
+\[
+    \P(\Delta) = \{X \in \Sym : \forall S \in \Delta,\;X|_S \succeq 0\}.
+\]
+Here, $X|_S$ denotes the principal submatrix of $X$ obtained by restricting to the rows and columns of $X$ indexed by elements of $S$.
+
+In this paper, we will be primarily concerned with how these cones relate to a family of polynomials which are \emph{linear combinations of principal minors} (LPM).
+Precisely, we say that a polynomial $p$ with inputs in $\Sym$ is LPM with support $\Delta$ if it is of the form
+\[
+    p(X) = \sum_{S \in \Delta} a_S\det(X|_S)
+\]
+for some coefficients $a_S$.
+
+We say that an LPM polynomial $p(X)$ is homogeneous if every set in its support has the same size.
+A homogeneous LPM polynomial $p(X)$ is said to be \emph{hyperbolic} with respect to the identity if $p(I) > 0$, and for any $X \in \Sym$, all of the complex roots of the univariate polynomial
+\[
+    p_X(t) = p(X + tI)
+\]
+are real.
+The study of hyperbolic LPM polynomials was begun in \cite{TODO}, which characterized the hyperbolic LPM polynomials.
+
+These LPM polynomials are of interest because they define convex cones, known as \emph{hyperbolicity cones}. The hyperbolicity cone of $p$ can be defined as 
+\[
+    \Lambda_I(p) = \{X \in \Sym : \forall t \ge 0, p(X + t I) \ge 0\}.
+\]
+The fact that these cones are convex was first shown by G\"arding in \cite{TODO} when studying differential equations.
+
+For our purposes, the main fact that is of interest is that if $p$ is a hyperbolic LPM polynomial with support $\Delta$, then $\P(\Delta)$ is contained in $\Lambda_I(p)$.
+Moreover, as long as we can efficiently compute the value of $p$ at a matrix $X$, the cone $\Lambda_I(p)$ is tractible, in the sense that we can apply interior point methods to solve convex optimization problems over $\Lambda_I(p)$.
+In this way, we can obtain tractible relaxations of $\P(\Delta)$ as long as we can find an efficiently computable hyperbolic LPM polynomial with support $\Delta$.
+
+This fact was used in \cite{TODO} in the case when $\Delta = \binom{[n]}{k}$, and when 
+\[
+    p(X) = \sum_{S \subseteq [n] : |S| = k} \det(X|_S).
+\]
+Using this polynomial, the authors were able to obtain tight lower bounds on the minimum eigenvalue of a matrix in $\P(\binom{[n]}{k})$.
+
+The main object of this paper is to apply this more general fact about LPM polynomials towards finding lower bounds on sparse semidefinite programs.
+We next describe the practical problems to which these ideas can be applied.
+\subsection{Sparse Semidefinite Programs and Quadratic Programs}
+A sparse QCQP is an optimization problem of the following form:\cite{TODO}
+\begin{equation}\label{eq:sparse_qcqp}
+    \begin{aligned}
+        \max\quad & q_0(x) \\
+        \st\quad & q_i(x) = a_i \text{ for }i \in \{1, \dots, k\}\\
+            &x \in \R^n\\
+            &\supp(x) \in \Delta
+    \end{aligned}
+\end{equation}
+Here, each $q_i$ denotes a quadratic polynomial in $x$ of the form $x^{\intercal} A_i x + b_i^{\intercal} x$.
+
+Associated to such a sparse QCQP is its \emph{Schur relaxation}\cite{TODO}:
+\begin{equation}\label{eq:sparse_sdp}
+    \begin{aligned}
+        \max\quad & \tr(A_0 X) + b_0^{\intercal} x\\
+        \st & \tr(A_i X) + b_i^{\intercal} x = a_i \text{ for }i \in [k]\\
+            &\begin{pmatrix}
+                X & x\\
+                x^{\intercal} & 1
+            \end{pmatrix} \in \M(\Delta')
+    \end{aligned}
+\end{equation}
+Here, $\Delta'$ consists of those $S \subseteq [n+1]$ so that $n+1 \in S$, and $S \cap [n] \in \Delta$.
+
+It can be seen that if $x$ is a feasible solution to \Cref{eq:sparse_qcqp}, then letting $X = xx^{\intercal}$ yields a feasible solution to \Cref{eq:sparse_sdp} with the same value.
+Thus, this is a relaxation in the sense that the optimal value of \Cref{eq:sparse_sdp} is an upper bound for the value of \Cref{eq:sparse_qcqp}.
+
+The question of how closely the relaxation approximates the true solution to the QCQP is a difficult and fascinating one, but we will only be concerned with \Cref{eq:sparse_sdp} in this paper.
+In particular, our techniques will only produce lower bounds on \Cref{eq:sparse_sdp}, which may not apply for \Cref{sparse_qcqp}.
+However, for the particular problems of interest which we describe below, the Schur relaxation is equivalent to the QCQP, and so, our upper bounds also apply to the QCQP.
+
+Our technique is essentially to first take the dual of \Cref{eq:sparse_sdp}, which is 
+\begin{equation}\label{eq:dual}
+    \begin{aligned}
+        \min\quad & \sum_{i=1}^k a_i y_i + z\\
+        \st & \sum_{i=1}^k \begin{pmatrix}
+            A_i & b_i\\
+            b_i^{\intercal} & 0
+        \end{pmatrix} y_i + 
+        \begin{pmatrix}
+            0 & 0\\
+            0 & 1
+        \end{pmatrix} z
+        - 
+        \begin{pmatrix}
+            A_0 & b_0\\
+            b_0 & 0
+        \end{pmatrix}
+        \in \P(\Delta')
+    \end{aligned}
+\end{equation}
+We will need to assume that strong duality holds in this case.
+We then take a hyperbolic LPM polynomial $p$ with support $\Delta$ and consider the relaxation of \Cref{eq:dual}
+\begin{equation}\label{eq:dual}
+    \begin{aligned}
+        \min\quad & \sum_{i=1}^k a_i y_i + z\\
+        \st & \sum_{i=1}^k \begin{pmatrix}
+            A_i & b_i\\
+            b_i^{\intercal} & 0
+        \end{pmatrix} y_i + 
+        \begin{pmatrix}
+            0 & 0\\
+            0 & 1
+        \end{pmatrix} z
+        - 
+        \begin{pmatrix}
+            A_0 & b_0\\
+            b_0 & 0
+        \end{pmatrix}
+        \in \Lambda_I(p)
+    \end{aligned}
+\end{equation}
+\subsection{Sparse Regression and Sparse PCA}
+There are in fact a number of cases when \Cref{eq:sparse_sdp} in fact gives the exact same value as \Cref{eq:sparse_qcqp}, for instance, when there is only one constraint.
+
+This is the case for the sparse principal components analysis (PCA) problem, which is defined for a symmetric matrix $A \in \R^{n\times n}$ by
+\[
+    \max \{x^{\intercal} A x : \|x\|_2^2 = 1, \|x\|_0 \le k\}.
+\]
+PCA is often used to reduce the dimensionality of a data set by only considering those dimensions in which the data has the highest variance.
+The dimensions returned by PCA are often linear combinations of all of the input dimensions, which can make it difficult to interpret semantically what the PCA directions mean.
+Sparse PCA ensures that the dimensions output in the results are linear combinations of only a small number of input features.
+This technique is of interest in data science and other fields \cite{TODO}.
+
+This also occurs in the sparse linear regression problem, which is defined for $A \in \R^{m \times n}$ and $b \in \R^m$ by
+\[
+    \min \{\|A x - b\|^2_2 : x \in \R^n, \|x\|_0 \le k\}.
+\]
+This is not quite in the form of a sparse QCQP defined above, but we will see below that it can be brought into the standard form, and that the Schur relaxation is tight in that case.
+This problem is of fundamental interest in data science as well, because it can be thought of as selecting the $k$ best features of the data for performing linear regression.
+In this sense, sparse linear regression is often used as a preprocessing step to reduce the number of features in a dataset before performing more complicated analyses on the data \cite{TODO}.
+
+We may also consider the more general problem of finding a sparse regressor whose support is constrained to be in some fixed set, for example
+\[
+    \min \{\|A x - b\|^2_2 : x \in \R^n, \supp(x) \in \Delta\}.
+\]
+This may be of interest if experimenters have some prior knowledge about what a good set of features will be before applying these 
+
+\subsection{Paper Outline}
+%TODO
+In this paper, we will describe general procedures for optimizing 
+
+
+
+%\bibliographystyle{plain}
+%\bibliography{biblio.bib}
+\end{document}
