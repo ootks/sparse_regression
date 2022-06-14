@@ -1,0 +1,75 @@
+\section{Introduction}
+The sparse linear regression problem is a variant of the classical linear regression problem where the number of nonzero coefficients in the final regression equation is required to be small.\cite{TODO}
+
+This problem and some of its variants is also known as the subset selection problem, \cite{TODO, https://www.pnas.org/doi/10.1073/pnas.2014241117} as it can be thougbt of as the problem of selecting $k$ features from the data set which provide the best linear regression model for the dataset.
+This problem is known to be NP-hard, even to approximate within polynomial factors \cite{TODO}
+This problem also has connections to compressed sensing, in which we are given an underdetermined system of linear equations, but promised that the resulting solution will be sparse  \cite{TODO}.
+There is an extensive literature giving heuristic and exact methods for solving certain cases of this problem \cite{TODO}.
+
+We will describe an interesting heuristic to solve this problem that arises from the study of hyperbolic polynomials. Hyperbolic polynomials have been of interest in recent years because their applications in both theoretical mathematics and computer science \cite{}. % TODO: wait, why are 
+
+We now define the sparse linear regression problem formally.
+For $A \in \R^{m\times n}$ and $b \in \R^{m}$, define the least squares error when regressing $b$ against $A$ by
+\[
+    \ell(A, b) = \min \{\|Ax - b\|^2 : x \in \R^n\}.
+\]
+We then define the sparse least squares loss function by
+\[
+    \ell_k(A,b) = \min \{\ell(A_S, b) : |S| \le k\}
+\]
+Here, for $S \subseteq [n]$, $A_S$ denotes submatrix of $A$ obtained by removing the columns of $A$ not in $S$.
+
+We can equivalently think of $\ell_k(A, b)$ as the following optimization problem:
+\begin{equation*}
+\begin{aligned}
+    \text{minimize} &&\|Ax-b\|^2\\
+    \text{such that } &&\|x\|_0 \le k
+\end{aligned}
+\end{equation*}
+Here, $\|x\|_0$ denotes the number of nonzero entries of $x$. 
+
+For the purpose of exposition, we will present a simplified probabilistic formulation for this heuristic in the introduction, though we will give a number of generalizations and equivalent formulations in the body of the paper.
+
+Given a subset $S \subseteq [n]$, we will let $A_S$ denote the restriction of $A$ to the columns in $S$, and we will let $A^{\intercal}A|_S$ denote the principal submatrix of $A^{\intercal}A$ whose rows and columns are both contained in $S$.
+We define the \emph{truncated determinantal point process} \cite{TODO} associated with $A$ to be the probability distribution on $k$ element subsets of $[n]$, such that for $S \in \binom{[n]}{k}$, $\Pr(S) \propto \det(A^{\intercal}A|_S)$.
+For $T \subseteq [n]$ with $|T| \le k$, we define the 
+\[
+    \eta_{T, k}^n(A,b) = \E[\ell(A_S, b) | T \subseteq S].
+\]
+We can interpret this as being the expected least squares error incurred when we regress using only the columns of $A$ chosen from the truncated determinantal point process.
+
+A related idea to this was considered in \cite{TODO}, though they did not restrict to sets of a fixed size, and they only considered problems with a small number of features.
+
+It is clear that for any $T \subseteq [n]$ with $|T| \le k$, $\eta_{T, k}^n(A,b) \ge \ell_k(A,b)$, since by the probabilistic method, there must exist some $S \substeq [n]$ where $\ell(A_S, b) \le \eta_{T, k}^n(A,b)$.
+This $S$ then gives us a solution to the sparse linear regression problem which performs at least this well.
+A standard reduction allows us to reduce the problem of deterministically finding some $S$ so that $\ell(A|_S, b) \le \eta_{\varnothing, k}^n(A, b)$ to computing the value of $ \eta_{T, k}^n(A, b)$ any given $T \subseteq [n]$.
+
+Our first insight in this paper is that we can deterministically compute $\eta_{T,k}^n$, as well as a number of generalizations of this quantity, efficiently using algebraic ideas.
+
+We will also show quantity $\eta_{T, k}^n(A, b)$ also arises naturally as the optimal value for a relaxation of the sparse linear regression problem.
+Specifically, we will show that 
+\begin{equation*}
+    \eta_{T, k}^n(A,b) =
+\begin{aligned}
+    \text{minimize} &&\|b\|^2 - y\\
+    \text{such that } &&A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in H_{T, k}^n,
+\end{aligned}
+\end{equation*}
+where $H_{T, k}^n$ is a hyperbolicity cone of the polynomial 
+\[
+    c_{T, k}^n(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S} \det(X|_S).
+\]
+We will give the definition of hyperbolicity cones and hyperbolic polynomials in Section \ref{TODO}.
+
+Having established that this quantity arises naturally in a number of settings, we will also examine the quality of this heuristic in a number of settings.
+
+We show that $\eta_{\varnothing, k}^n(A,b)$ is basis invariant in the sense that if $U$ is an orthgonal transformation, then $\eta_{\varnothing, k}^n(A,b) = \eta_{\varnothing, k}^n(UA,Ub)$.
+Using this fact, we are able to compare the result of sparse linear regression to regression according to the top $k$ singular vectors of $A$ when $A$ is sufficiently close to being low rank.
+
+We are also able to show a result which was previously shown for $\ell_1$ regression methods that if $A$ satisfies the restricted isometry property (RIP), then our method can recover a $k$-sparse vector $f$ from the value of $Af+\epsilon$, where $\epsilon$ is a sufficiently small random noise.
+
+In practice, we are able to compare our method to regression with $\ell_1$ regression methods in cases when $n$ is in the thousands and $k$ is small. %TODO: Do this.
+
+The structure of this paper is as follows: we begin with some preliminaries on the types of polynomials that we will use to solve this problem, and how they relate to convex optimization and the sparse linear regression problem.
+We then give some precise statements of the results we show in this paper.
+The last half of this paper is devoted to proofs of these results.

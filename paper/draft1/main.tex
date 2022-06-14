@@ -1,0 +1,793 @@
+%% Found this template at https://people.math.sc.edu/howard/Classes/790/amsart.html
+
+% Use AMS Document Class
+\documentclass{amsart}
+\usepackage[margin=.8in]{geometry}
+
+% Use amssymb package
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{float}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+% Personal definitions
+\usepackage{defs}
+\usepackage{subcaption}
+
+% Theorem style
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{remark}[thm]{Remark}
+\newtheorem{conj}[thm]{Conjecture} 
+
+% Definition style
+\theoremstyle{definition}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{example}[thm]{Example}
+
+
+% Number equations with sections
+\numberwithin{equation}{section}
+
+
+\begin{document}
+
+\title{Sparse Linear Regression and Hyperbolic Polynomials}
+
+\author{Kevin Shu}
+\address{Department of Mathematics, Georgia Institute of Technology, 
+Atlanta, GA}
+\email{kshu8@gatech.edu}
+\urladdr{www.kevinshu.me}
+
+\begin{abstract}
+    We consider the sparse linear regression problem, also known as subset selection, where we seek to find a small subset of the features in some data set that best explains some dependent variable of interest.
+    We develop a polynomial time heuristic for sparse linear regression which is motivated by the recent success of hyperbolic polynomials in many aspects of modern computer science.
+    We give both a probabilistic formulation for this heuristic, and also show that it gives the optimum value of a convex conical program which forms a relaxation of the sparse linear regression problem.
+    We also explore how well this heuristic performs in a number of cases.
+    For instance, in the well studied case of the compressed sensing problem, we show that our heuristic will recover a sparse vector from an underdetermined system of equations even in the presence of noise.
+    We will also give a result that compares the optimal sparse linear regressor with PCA based methods for regression.
+    We will also give numerical examples comparing our methods to existing methods such as LASSO.
+\end{abstract}
+\maketitle
+
+% Start of Introduction
+\section{Introduction}
+The sparse linear regression problem is a variant of the classical linear regression problem where the number of nonzero coefficients in the final regression equation is required to be small.
+This problem and some of its variants is also known as the subset selection problem, \cite{TODO, delpia2020subset, zhu2020polynomial} as it can be thougbt of as the problem of selecting $k$ features from the data set which provide the best linear regression model for the dataset.
+This problem is known to be NP-hard, even to approximate within polynomial factors \cite{welch1982algorithmic}
+This problem also has connections to compressed sensing, in which we are given an underdetermined system of linear equations, but promised that the resulting solution will be sparse  \cite{1542412}.
+There is an extensive literature giving heuristic and exact methods for solving certain cases of this problem \cite{bertsimas2016best}.
+
+We will describe an interesting heuristic to solve this problem that arises from the study of hyperbolic polynomials. Hyperbolic polynomials have been of interest in recent years because their applications in both theoretical mathematics and computer science \cite{anari2016nash,saunderson2019certifying,borcea2008applications, wagner2011multivariate}.
+
+We now define the sparse linear regression problem formally.
+For $A \in \R^{m\times n}$ and $b \in \R^{m}$, define the least squares error when regressing $b$ against $A$ by
+\[
+    \ell(A, b) = \min \{\|Ax - b\|^2 : x \in \R^n\}.
+\]
+We then define the sparse least squares loss function by
+\begin{equation}
+    \ell_k(A,b) = \min \{\ell(A_S, b) : |S| \le k\}\label{eq:sparse}
+\end{equation}
+Here, for $S \subseteq [n]$, $A_S$ denotes submatrix of $A$ obtained by removing the columns of $A$ not in $S$.
+
+We can equivalently think of $\ell_k(A, b)$ as the following optimization problem:
+\begin{equation*}
+\begin{aligned}
+    \text{minimize} &&\|Ax-b\|^2\\
+    \text{such that } &&\|x\|_0 \le k
+\end{aligned}
+\end{equation*}
+Here, $\|x\|_0$ denotes the number of nonzero entries of $x$. 
+
+For the purpose of exposition, we will present a simplified probabilistic formulation for this heuristic in the introduction, though we will give a number of generalizations and equivalent formulations in the body of the paper.
+
+Given a subset $S \subseteq [n]$, we will let $A_S$ denote the restriction of $A$ to the columns in $S$, and we will let $A^{\intercal}A|_S$ denote the principal submatrix of $A^{\intercal}A$ whose rows and columns are both contained in $S$.
+We define the \emph{truncated determinantal point process} (tDPP) \cite{anari2016monte} associated with $A$ to be the probability distribution on $k$ element subsets of $[n]$, such that for $S \in \ksets$, $\Pr(S) \propto \det(A^{\intercal}A|_S)$.
+For $T \subseteq [n]$ with $|T| \le k$, we define %TODO:name
+\[
+    \eta_{T, k}^n(A,b) = \E[\ell(A_S, b) | T \subseteq S].
+\]
+We can interpret this as being the expected least squares error incurred when we regress using only the columns of $A$ chosen from the tDPP.
+
+tDPPs are common in applications related to feature selection, as they can be thought of as rewarding `diversity' in the columns that are selected by the process\cite{belhadji2018determinantal}.
+A related idea for using determinantal point processes for sparse linear regression was considered in \cite{mutsuki2022deter}, though they did not restrict to sets of a fixed size, and they only considered problems with a small number of features.
+
+It is clear that for any $T \subseteq [n]$ with $|T| \le k$, $\eta_{T, k}^n(A,b) \ge \ell_k(A,b)$, since by the probabilistic method, there must exist some $S \subseteq [n]$ where $\ell(A_S, b) \le \eta_{T, k}^n(A,b)$.
+A standard reduction allows us to reduce the problem of deterministically finding some $S$ so that $\ell(A|_S, b) \le \eta_{\varnothing, k}^n(A, b)$ to computing the value of $ \eta_{T, k}^n(A, b)$ for given $T \subseteq [n]$.
+
+Our first insight in this paper is that we can deterministically compute $\eta_{T,k}^n$, as well as a number of generalizations of this quantity, efficiently using algebraic ideas.
+
+We will also show quantity $\eta_{T, k}^n(A, b)$ also arises naturally as the optimal value for a relaxation of the sparse linear regression problem.
+Specifically, we will show that 
+\begin{equation*}
+    \eta_{T, k}^n(A,b) =
+\begin{aligned}
+    \text{minimize} &&\|b\|^2 - y\\
+    \text{such that } &&A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in H_{T, k}^n,
+\end{aligned}
+\end{equation*}
+where $H_{T, k}^n$ is a convex cone, which is specifically the hyperbolicity cone of the polynomial 
+\[
+    c_{T, k}^n(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S} \det(X|_S).
+\]
+We will give the definition of hyperbolicity cones and hyperbolic polynomials in Section \ref{sec:hyperbolicity}, but for now, it suffices to note that interior point methods can optimize over these cones efficiently \cite{guler1997hyperbolic}.
+
+Having established that this quantity arises naturally in a number of settings, we will also examine the quality of this heuristic in a number of settings.
+
+We show that $\eta_{\varnothing, k}^n(A,b)$ is basis invariant in the sense that if $U$ is an orthgonal transformation, then $\eta_{\varnothing, k}^n(A,b) = \eta_{\varnothing, k}^n(UA,Ub)$.
+Using this fact, we are able to compare the result of sparse linear regression to regression according to the top $k$ singular vectors of $A$ when $A$ is sufficiently close to being low rank.
+This seems to be deeply related to a result shown in \cite{belhadji2018determinantal}. %TODO: Do this.
+
+We are also able to show a result which was previously shown for $\ell_1$ regression methods that if $A$ satisfies the restricted isometry property (RIP), then our method can recover a $k$-sparse vector $f$ from the value of $Af+\epsilon$, where $\epsilon$ is a sufficiently small random noise.
+
+In practice, we are able to compare our method to regression with $\ell_1$ regression methods in cases when $n$ is in the thousands and $k$ is small. %TODO: Do this.
+
+The structure of this paper is as follows: we begin with some preliminaries on the types of polynomials that we will use to solve this problem, and how they relate to the sparse linear regression problem and hyperbolic optimization.
+We then give some precise statements of the results we show in this paper.
+The last half of this paper is devoted to proofs of these results.
+% End of Introduction
+% Start of Computation
+\section{Effeciently Computing $\eta_{T, k}.$}
+We will be making use of a number of theorems from linear algebra, such as the matrix-determinant lemma for rank 1 updates to the determinant, and the Schur complement lemma.
+All of these results can be found in any standard reference on linear algebra, and we recommend \cite{horn2012matrix}.
+\subsection{Linear Principal Minor Polynomials}
+In this section, we will define a family of polynomials whose properties we will be considering in detail throughout this paper.
+
+Let $\vec{a} = (a_S : S \in \binom{[n]}{k}) \in \R^{\binom{n}{k}}$ be a vector of coefficients, and let $X$ be a symmetric matrix of indeterminants.
+
+We will associate to $\vec{a}$ the \emph{linear principal minor} (lpm) polynomial $p_{\vec{a}}(X)$,
+\[
+    p_{\vec{a}}(X) = \sum_{S \in \binom{[n]}{k}} a_S\det(X|_S),
+\]
+where $X|_S$ denotes the principal submatrix of $X$ indexed by $S$.
+
+One key family of examples of such polynomials are the \emph{characteristic coefficients}, which are defined as
+\[
+    c_k^n(X) = p_{\vec{1}}(X) = \sum_{S \in \binom{[n]}{k}} \det(X|_S).
+\]
+Here, $\vec{1}$ denotes the all 1's vector.
+
+These arise naturally when considering the eigenvalues of a matrix, as we have the following formula for the characteristic polynomial of an $n\times n$ matrix:
+\[
+    \det(X + tI) = \sum_{k=0}^n c_{n-k}^n(X) t^k.
+\]
+
+In particular, we see that $c_k^n(X)$ invariant under change of basis, i.e for any orthogonal matrix $U$, $c_k^n(X) = c_k^n(U^{\intercal}XU)$.
+
+One operation that we will need to perform on these polynomials is what we call \emph{restriction}, which we will use in the next subsection to compute conditional expectations for weighted determinantal point processes.
+
+Given a lpm polynomial $p_{\vec{a}}$ of degree $k$, we define the restriction of $p_{\vec{a}}$ to a set $T \subseteq [n]$ with $|T| \le k$ by
+\[
+    p_{\vec{a}, T}(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S} a_S \det(X|_S)
+\]
+We will want a formula for $p_{\vec{a}, T}$ in terms of $p_{\vec{a}}$.
+To do this, we will need to define the Schur complement of $X$ when $X$ is a symmetric matrix, and $T \subseteq [n]$.
+Suppose we have the following block structure for $X$,
+\[
+    X = 
+    \begin{pmatrix}
+        X|_T & X_{T, [n] \setminus T}\\
+        X_{[n] \setminus T, T} & X|_{[n] \setminus T}\\
+    \end{pmatrix}
+\]
+then the Schur complement of $X$ with respect to $T$ is
+\[
+    X \setminus T = X|_{[n]  - T} -  X_{[n] \setminus T, T} X|_{T}^{-1}X_{T, [n] \setminus T}.
+\]
+
+\begin{lemma}\label{lem:poly_cond}
+    Suppose that $T\subseteq [n]$ with $|T| = t \le k$, then
+\[
+    p_{\vec{a}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X \setminus T) 
+\]
+\end{lemma}
+\begin{proof}
+    Firstly, it is possible to see from the polynomial expansion of the determinant that
+    \[
+        \frac{\partial}{\partial X_{ii}}\det(X|_S) = 
+        \begin{cases}
+            0 \text{ if }i \not \in S\\
+            \det(X|_{S \setminus i}) \text{ otherwise}.            
+        \end{cases}
+    \]
+    Therefore, we can see by induction that 
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}\det(X|_S) = 
+        \begin{cases}
+            0 \text{ if }T\not \subseteq S\\
+            \det(X|_{S \setminus T}) \text{ otherwise}
+        \end{cases}
+    \]
+    We then have that 
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S}
+        a_S \det(X|_{S \setminus T}).
+    \]
+
+    Next, we will need to use the following two facts about Schur complements: 
+    firstly, there is the Schur complement lemma, which states that
+    \[
+        \det(X) = \det(X|_T) \det(X \setminus T).
+    \]
+    Secondly, we have that Schur complements commute with taking submatrices, in that if $T \subseteq S \subseteq [n]$, then
+    \[
+        (X|_S) \setminus T = (X \setminus T)|_{S \setminus T}.
+    \]
+
+    Therefore, we see that 
+    \begin{align*}
+        \det(X|_T)\left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X \setminus T)
+        &= \sum_{S \in \binom{[n]}{k} : T \subseteq S}
+        a_S \det(X|_T)\det((X\setminus T)|_{S \setminus T})\\
+        &= \sum_{S \in \binom{[n]}{k} : T \subseteq S} a_S \det(X|_S)\\
+        &= p_{\vec{a}, T}(X)
+    \end{align*}
+
+    
+\end{proof}
+
+
+\subsection{Weighted Determinantal Point Processes}
+We now let $\vec{a} = (a_S : S \in \binom{[n]}{k}) \in \R_+^{\binom{n}{k}}$, so that these coefficients are assumed to be nonnegative.
+Let $M$ be a fixed positive semidefinite definite matrix.
+
+We define the weighted determinantal point process for this set of coefficients to be a proability distribution on $S \in \binom{[n]}{k}$ with probability mass function given by
+\[
+    \mu_{M, \vec{a}}(S) \propto a_S \det(M|_S).
+\]
+
+To relate this to sparse linear regression, we can imagine using the following randomized variant of sparse linear regression.
+Given the data $A$ and $b$, first draw a random subset $S$ according to $\mu_{AA^{\intercal}, \vec{a}}$, and then perform the regression using only the columns of $A$ in $S$.
+
+We can then notate the expected error produced by this randomized linear regression.
+\[
+    \eta_{\vec{a}, T, k}(A,b) = \E_{\mu_{AA^{\intercal},\vec{a}}} [\ell(A_S, b) | T \subseteq S].
+\]
+Once again, this expectation serves as an upper bound on the sparse linear regression problem.
+
+We can then relate this quantity $\eta_{\vec{a}, T, k}(A, b)$ to the lpm polynomial $p_{\vec{a}}$:
+\begin{theorem}
+    If $AA^{\intercal}$ has rank at least $k$, then
+\[
+     \eta_{\vec{a}, T, k}(A,b) =
+     \|b\|^2 - \frac{p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A)}{p_{\vec{a}, T}(AA^{\intercal})} + 1
+ \]
+\end{theorem}
+\begin{proof}
+    We first recall the so-called matrix determinant lemma, which states that for any invertible $X \in \R^{n\times n }$ and $v \in \R^{n}$
+    \[
+        \det(X + vv^{\intercal}) = (1+v^{\intercal}X^{-1}v)\det(X).
+    \]
+
+    This implies that
+    \begin{align*}
+        p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A) &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S + A^{\intercal}bb^{\intercal}A|_S)\\
+                                                                   &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S)\big(1+b^{\intercal}A_S(A^{\intercal}A|_S)^{-1}A_S^{\intercal}b\big)\\
+    \end{align*}
+
+    We also recall the closed form formula for $\ell(A,b)$, given by
+    \[
+        \ell(A,b) = \|b\|^2 - b^{\intercal}A(A^{\intercal}A)^{-1}A^{\intercal}b.
+    \]
+
+    We can thus simplify the above expression and see that
+
+    \begin{align*}
+        p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A) &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S)\big(1+\|b\|^2-\ell(A_S,b)\big)\\
+                                                                   &= (1+\|b\|^2)\left( \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A) \right) + \sum_{S \in \binom{[n]}{k}}\det(A^{\intercal}A|_S)\ell(A|_S,b)\\
+                                                                   &= (1+\|b\|^2)p_{\vec{a}}(A^{\intercal}A) + \sum_{S \in \binom{[n]}{k}, T \subseteq S}\det(A^{\intercal}A|_S)\ell(A_S,b)\\
+    \end{align*}
+
+    We then have that
+
+    \begin{align*}
+        \frac{p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A)}{p_{\vec{a}, T}(A^{\intercal}A)} &= (1+\|b\|^2) + \big(\sum_{S \in \binom{[n]}{k}, T \subseteq S}\Pr(S)\ell(A_S,b)\big)\\
+                                                                                                      &= \|b\|^2 - 
+                                                                                                      \eta_{\vec{a}, T, k}(A, b) + 1
+    \end{align*}
+
+    Rearranging, we obtain the result.
+    
+\end{proof}
+\begin{remark}
+    There is a rich literature concerning the proiblem of efficiently sampling from truncated determinantal point processes \cite{anari2016monte}, but it is worth noting that sampling based approaches will not be effective at computing this quantity to the accuracy that we wish to compute it.
+
+   For instance, consider the unweighted case where $\vec{a} = \vec{1}$, and suppose that $A^{\intercal}A$ is such that for any $S \subseteq [n]$ with $|S| = k$, $\det(A^{\intercal}A|_S) = 1$.
+   In this case, we see that the determinantal point process selects elements from $\binom{[n]}{k}$ uniformly at random.
+   So, we can consider two cases: one in which $b$ is chosen to lie in the image of $A_S$, and one in which $b$ is chosen to be orthogonal to the image of $A$.
+   If we attempted to distinguish these two cases using sampling, we would need to take $\Omega(\binom{[n]}{k})$ samples before we could find that there is some $S$ so that $\ell(A_S, b) < \|b\|^2$.
+   On the other hand, by computing the expectation in these two cases, we could immediately detect which situation we are in.
+\end{remark}
+
+We have thus reduced the problem of computing $\eta_{\vec{a}, T, k}(A, b)$ to that of computing $p_{\vec{a}, T}$, which the following lemma makes formal.
+
+\begin{lemma}
+    If we can compute $p_{\vec{a}}(X)$ in $O(\tau)$ time for any complex symmetric matrix $X$, then we can compute  $\eta_{\vec{a}, T, k}(A, b)$ in $O(k\tau + k\log(k) + n^\omega)$ time, where $\omega$ denotes the matrix multiplication constant.
+\end{lemma}
+\begin{proof}
+
+    We have seen that in order to compute $\eta_{\vec{a}, T, k}(A, b)$, it suffices to compute $p_{\vec{a}, T}$ at $A^{\intercal}A$ and $A^{\intercal}A+A^{\intercal}bb^{\intercal}A$.
+
+    Let $|T| = t$.
+    We have seen in lemma \ref{lem:poly_cond} that
+    \[
+        p_{\vec{a}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X \setminus T) 
+    \]
+    For symmetric matrices $X$, We can easily compute $X \setminus T$ and $\det(X|_T)$ in $n^{\omega}$ time, and so it remains to argue that we can compute 
+    \[
+         \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X)
+    \]
+    in the desired time.
+
+    If we let $D$ be the diagonal matrix so that $D_{ii} = \begin{cases} 1 \text{ if }i \in T\\0 \text{ otherwise}\end{cases}$, we can see that we can rewrite this expression as a directional derivative:
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{t}p_{\vec{a}}(X) = \frac{d^{t}}{dt^{t}} p_{\vec{a}}(X + tD)|_{t = 0}. 
+    \]
+    Notice that $p_{\vec{a}}(X + tD)$ is a univariate polynomial in $t$ of degree $k$.
+    Therefore, if we can compute this function at $k$ distinct values of $t$, then we can uniquely recover all of the coefficients of this univariate polynomial via interpolation.
+    Computing this at any $k$ distinct values only requires $k\tau$ time.
+
+    In fact, using the Fast-Fourier transform, it is in fact possible to reconstruct all of the coefficients of this polnymial this $k\log(k)$ time from its evaluations at all the $r^{th}$ roots of unity where $r = 2^{\lceil \log(k) \rceil}$.
+
+    Once we have all of the coefficients of $p_{\vec{a}}(X + tD)$, we can compute $\frac{d^{t}}{dt^{t}}$ in constant time by reading of the $t^{th}$ coefficient of this polynomial.
+    This gives the final time complexity given in the theorem.
+\end{proof}
+
+\subsection{Characteristic Coefficients}
+We will see that we can in fact obtain much faster methods when the polynomial in question is the characteristic coefficient defined above.
+
+In fact, there are a number of algorithms for computing the characteristic coefficients of a symmetric matrix.
+Here, we will use the the Fadeev-LeVerrier method for computing the characteristic coefficients, which has the advantage of not needing to compute all of the characteristic coefficients at once.
+\begin{lemma}
+    We can compute  $\eta_{\vec{1}, T, k}(A, b)$ in $O(kn^{\omega})$ time where $\omega$ is the matrix multiplication constant.
+\end{lemma}
+\begin{proof}
+We will once again make use of our result that
+\[
+    p_{\vec{1}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{1}}(X \setminus T) 
+\]
+We will note that for the characteristic coefficients,
+\[
+    \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}c_k^n(X)  = c_{k-|T|}^{n-|T|}(X|_{[n] \setminus T})
+\]
+Therefore, 
+\[
+    p_{\vec{1}, T}(X) = \det(X|_T) c_k^n(X \setminus T) 
+\]
+
+The Fadeev-LeVerrier algorithm computes $c_k^n$ in $O(kn^{\omega})$ time \cite{bar2021faddeev}, and the result follows.
+\end{proof}
+
+\subsection{A Heuristic for Sparse Regression}
+We will focus this section on the unweighted determinantal point process, as that illustrates all of the relevant ideas, and is what we will use in our simulations.
+
+We can now present our heuristic for finding a sparse regressor.
+\begin{algorithm}
+    \caption{The $\eta$-greedy method}
+    \begin{algorithmic}\label{alg:greedy}
+        \State $T \gets \varnothing$
+        \For{$t = 1 \dots k$}
+            \State $j \gets \argmin \eta_{T+j, k}(A,b)$
+            \State $T \gets T + j$
+        \EndFor
+
+        \Return T
+    \end{algorithmic}
+\end{algorithm}
+We can think of method as follows: we will iteratively construct the set which we will use for regression.
+At each step, we will choose the element from $[n]$ which minimizes our expected error, if we condition on taking the elements we have already selected.
+%end of computation.
+
+\section{Connections to Hyperbolic Optimization}\label{sec:hyperbolicity}
+\subsection{Conical Optimization and Sparse Linear Regression}
+In \cite{atamturk2019rank}, the authors introduced a conical optimization formulation for sparse regression and also introduced the idea of finding tractible convex relaxations of this formulation.
+This formulation was simplified and more relaxations were found in later work \cite{bach2010convex}, and \cite{BENAMEUR2022425} gave an elegant formulation for this problem in terms of the factor-width-$k$ cone:
+\begin{equation}\label{eq:cvx_prg}
+\begin{aligned}
+    \alpha = 
+    \text{minimize} &&\|b\|^2 - \tr(XA^{\intercal}bb^{\intercal}A)\\
+    \text{such that } && \tr(AA^{\intercal}X) = 1\\
+                      && X \in \FW^{n,k}
+\end{aligned}
+\end{equation}
+Here, $\FW^{n,k}$ denotes the factor width $k$ cone, which is defined as 
+\[
+    \FW^n_k = \conv \{xx^{\intercal} : x \in \R^{n}, \|x\|_0 \le k\}.
+\]
+This cone has been the subject of much study, for example in \cite{boman2005factor}. In particular, its dual is known to be 
+\[
+    S^n_k = \{X \in \Sym(\R^n) : \forall S\in \binom{[n]}{k}, X|_S \succeq 0 \}.
+\]
+Here, $X|_S \succeq 0$ denotes the fact that $X|_S$ is PSD.
+
+In \cite{blekherman2020hyperbolic}, a relaxation was given for $S^n_k$, which happens to be a hyperbolicity cone.
+We define
+\[
+    H^{n,k} = \{X \in \Sym(\R^n) : \forall t\ge 0, c^k_n(X+tI) \ge 0\}.
+\]
+This relaxation was used to fully give bounds for the possible eigenvalues of matrices of $S^n_k$.
+
+In the next section, we will give some general theory about hyperbolic polynomials and their hyperbolicity cones, and then show how this theory relates to the sampling theory given in the previous part of this paper.
+\subsection{Hyperbolicity Cones}
+A multivariate polynomial $p \in \R[x_1 ,\dots, x_n]$ is said to be \emph{hyperbolic} with respect to fixed $e \in \R^n$ if $p(e) > 0$, and for all $x \in \R^n$, the univariate polynomial $g(t) = p(x+te)$ is real rooted, in the sense that the only complex numbers $t$ where $g(t) = 0$ are real.
+A multivariate polynomial $p$ is said to be \emph{stable} if $p$ is hyperbolic with respect to $e$ for all $e \in \R_+^n$.
+
+Hyperbolic polynomials were originally defined in the work of Garding in differential equations \cite{gaarding1951linear}, and they have been the subject of much study because of their connections to combinatorics and optimization \cite{wagner2011multivariate}.
+
+One object of particular interest attached to a polynomial $p$ is the \emph{hyperbolicity cone} of $p$ with respect to $e$.
+
+If $p$ is hyperbolic with respsect to $e$, then the hyperbolicity cone of $p$ with respect to $e$ is defined as
+\[
+    \Lambda_e(p) = \{x \in \R^n : \forall t \ge 0, p(x+te) \ge 0\}.
+\]
+
+The hyperbolicity cone of a polynomial is known to be convex, and moreover, it is known that the function $\log(p(x))$ is a self-concordant barrier function for $\Lambda_e(p)$ \cite{guler1997hyperbolic}. 
+For our purposes, it is sufficient to note that $p(x) > 0$ for $x \in \relint\Lambda_e(p)$, and $p(x) = 0$ for $x \in \partial \Lambda_e(p)$.
+
+An important example of a hyperbolic polynomial is the determinant of a symmetric matrix, which is hyperbolic with respect to the identity matrix. Hyperbolicity in this case follows immediately from the spectral theorem. The associated hyperbolicity cone is precisely the positive semidefinite cone.
+
+It is known that if $p$ is hyperbolic with respect to $e$, then $D_ep$ is also hyperbolic with respect to $e$, where $D_e$ denotes the directional derivative of $p$ with respect to $e$.
+In the case of the determinant, $D_I^k\det(X) = (n-k)!c_{n-k}^n(X)$, which shows that the characteristic coefficients are all hyperbolic.
+
+One particular class of polynomials which are of interest to us are the hyperbolic lpm polynomials.
+In \cite{blekherman2021lin}, it was shown that 
+\begin{theorem}
+    The lpm polynomial $p_{\vec{a}}(X)$ with nonnegative coefficients is hyperbolic with respect to $I$ if and only if 
+    \[
+        \sum_{S \in \binom{[n]}{k}} a_S\prod_{i\in S}x_i
+    \]
+    is stable.
+\end{theorem}
+
+Any lpm polynomial gives rise to a family of relaxations for $S^n_k$, due to the following fact:
+\begin{theorem}
+    Suppose that $p_{\vec{a}}(X)$ is a degree $k$ lpm polynomial with nonnegative coefficients which is hyperbolic with respect to $I$, then 
+    \[
+        S^n_k \subseteq \Lambda_{I}(p_{\vec{a}}).
+    \]
+\end{theorem}
+\begin{proof}
+    If $X \in S^n_k$, then $X|_S \succeq 0$, so that for any $t \ge 0$,
+    \[
+        \det((X+tI)|_S) \ge 0.
+    \]
+    In particular, for $t \ge 0$,
+    \[
+        p_{\vec{a}}(X+tI) = \sum_{S \in \binom{[n]}{k}} a_S\det((X+tI)|_S) \ge 0.
+    \]
+    This shows that $X \in \Lambda_I(p_{\vec{a}})$.
+\end{proof}
+
+\subsection{Optimization and Sampling}
+We now connect the probabilistic formula of $\eta_k^n$ to this optimization perspective.
+
+We can dualize Equation \ref{eq:cvx_prg}, and apply Slater's condition to see that strong duality holds.
+\begin{equation}\label{eq:cvx_dual}
+    \ell_{k}(A, b) =
+\begin{aligned}
+    \text{maximize} &&\|b\|^2 - y\\
+    \text{such that } && A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in S^{n,k}
+\end{aligned}.
+\end{equation}
+
+We may then relax this problem as follows: let $p_{\vec{a}}$ be any lpm polynomial with nonnegative coefficients, and which is hyperbolic with respect to $I$. Then,
+\begin{equation}\label{eq:cvx_relax}
+    \ell_{k}(A, b) \le
+\begin{aligned}
+    \text{maximize} &&\|b\|^2 - y\\
+    \text{such that } && A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in \Lambda(p_{\vec{a}})
+\end{aligned}.
+\end{equation}
+
+\begin{theorem}
+\begin{equation*}
+\eta_{\vec{a}, \varnothing, k}(A, b) =
+\begin{aligned}
+    \text{maximize} &&\|b\|^2 - y\\
+    \text{such that } && A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in \Lambda(p_{\vec{a}})
+\end{aligned}.
+\end{equation*}
+\end{theorem}
+\begin{proof}
+    It is clear that the optimal value of $y$,
+    \[
+        A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in \partial\Lambda(p_{\vec{a}})
+    \]
+
+    At this point, we have that $y > 0$, and
+    \[
+        p_{\vec{a}}(A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A) = 0.
+    \]
+    Regard 
+    \[
+        g(y) = p_{\vec{a}}(A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A)
+    \]
+    as a univariate polynomial in $y$.
+
+    When $y = 0$, we see that 
+    \[
+        g(0) = p_{\vec{a}}(A^{\intercal}bb^{\intercal}A) = 0,
+    \]
+    and indeed, because $A^{\intercal}bb^{\intercal}A$ is of rank 1, this root is of multiplicity $k-1$.
+
+    This implies that $g(y)$ must have the form
+    \[
+        g(y) = c_1y^k + c_2y^{k-1}
+    \]
+    Here, 
+    \[
+        c_1 = \lim_{y\rightarrow \infty} \frac{g(y)}{y} = p_{\vec{a}}(A^{\intercal}A),
+    \]
+    and 
+    \[
+        c_2 = g(1) - c_1 = p_{\vec{a}}(A^{\intercal}A+A^{\intercal}bb^{\intercal}A) -  p_{\vec{a}}(A^{\intercal}A).
+    \]
+
+    Therefore, the only nonzero root of $g(y)$ is when
+    \[
+        y = 1- \frac{p_{\vec{a}}(A^{\intercal}A+A^{\intercal}bb^{\intercal}A)}{p_{\vec{a}}(A^{\intercal}A)}.
+    \]
+
+    Combining, we see that 
+    \begin{equation*}
+    \eta_{\vec{a}, \varnothing, k}(A, b) =
+    \begin{aligned}
+        \text{maximize} &&\|b\|^2 - y\\
+        \text{such that } && A^{\intercal}Ay - A^{\intercal}bb^{\intercal}A \in \Lambda(p_{\vec{a}})
+    \end{aligned}.
+    \end{equation*}
+
+    As desired.
+\end{proof}
+
+\section{Sparse Regression and PCA}
+In this section, we will consider 
+\[
+    \eta_{k, \varnothing}(A, b) = \|b\|^2 - \frac{c_k^n(A^{\intercal}A + A^{\intercal}bb^{\intercal}A)}{c_k^n(A^{\intercal}A)} + 1.
+\]
+We have seen that this provides an upper bound on the sparse least squares loss.
+On the other hand, $c_k^n(X)$ is a basis invariant polynomial.
+This suggests that we may be able ot relate some basis invariant features of $A$, such as the singular values of $A$, to the sparse linear regression loss.
+
+For this, let the singular value decomposition of $A$ be 
+\[
+    A = U\Sigma V
+\]
+where $U$ and $V$ are orthogonal, and $\Sigma$ is diagonal, where $\Sigma_{ii}  = \sigma_i(A)$, and $\sigma_1(A) \ge \sigma_2(A) \dots $.
+
+The \emph{principal components analysis} (PCA) problem is to find the $k$ largest singular values of $A$, and the corresponding $k$ singular directions, $v_1, \dots, v_k$.
+A common property of real world data matrices is that $\sigma_i(A)$ is very small for $i$ much smaller than $n$, so that $A$ is actually well approximated by the first $k < n$ singular vectors.
+
+We define the spectral sparsification of $A$ to be 
+\[
+    A^{(k)} = U\Sigma^{(k)}V
+\]
+Here, $\Sigma^{(k)}$ is obtained by setting all but the first $k$ columns of $\Sigma$ to 0.
+Out of all rank $k$ matrices, $A^{(k)}$ is known to be the one that is closest to $A$ in Frobenius norm \cite{TODO}.
+
+Consider $\ell(A^{(k)}, b)$, which is the result of using the top $k$ singular vectors of $A$ to perform linear regression on $b$.
+This quantity is natural because we may wish to first perform dimension reduction by spectrally sparsifying $A$, and then performing linear regression on $b$.
+
+We will show that if the top $k$ singular values of $A$ are significantly larger than the bottom $k$ singular values, then in fact, sparse linear regression performs comparably to regression according to the top $k$ singular vectors.
+\begin{lemma}
+    Let 
+    \[
+        p = \frac{\prod_{i=1}^k \sigma_i^2}{c_k^n(A^{\intercal}A)}
+    \]
+
+    Then,
+    \[
+        \eta_{k, \varnothing}(A, b) \le p\ell(A^{(k)}, b) + (1-p) \|b\|^2.
+    \]
+\end{lemma}
+\begin{proof}
+    it can be seen from our formula that 
+    \[
+        \eta_{k, \varnothing}(A, b) = 
+        \eta_{k, \varnothing}(U^{\intercal}AV^{\intercal}, U^{\intercal}b) = 
+        \eta_{k, \varnothing}(\Sigma, U^{\intercal}b)
+    \]
+    Now, we note that the tDDP $\mu_{\Sigma^2}$ assigns to the set $S$ probability $\frac{\prod_{i\in S}\sigma_i(A)^2}{c_k^n(A^{\intercal}A)}$.
+    
+    Therefore,
+    \[
+        \eta_{k, \varnothing}(\Sigma, U^{\intercal}b) = \E_{\mu_{\Sigma^2}}[\ell(\Sigma|_S, U^{\intercal}b)].
+    \]
+    We will write
+    \[
+        \E_{\mu_{\Sigma^2}}[\ell(\Sigma|_S, U^{\intercal}b)] = 
+        \Pr(S = \{1 ,\dots, k\}) \ell(\Sigma^{(k)}, U^{\intercal}b) + (1-\Pr(S = \{1 ,\dots, k\}))\E_{\mu_{\Sigma^2}}[\ell(\Sigma|_S, U^{\intercal}b) | S \neq \{1 ,\dots, k\}].
+    \]
+    Now, we have that $\Pr(S = \{1 ,\dots, k\}) = \frac{\prod_{i\in S}\sigma_i(A)^2}{c_k^n(A^{\intercal}A)} = p$. We also have that $\ell(\Sigma|_S, U^{\intercal}b) \le \|b\|^2$, so that
+    \[
+        \eta_{k, \varnothing}(A,b) \le
+        p \ell(\Sigma^{(k)}, U^{\intercal}b) + (1-p)\|b\|^2 =
+        p \ell(A^{(k)}, b) + (1-p)\|b\|^2,
+    \]
+    as desired.
+\end{proof}
+
+We now want to give some natural conditions under which $p = \frac{\prod_{i=1}^k \sigma_i^2}{c_k^n(A^{\intercal}A)}$ is close to 1.
+A strong such condition is that $A$ is close to low rank, in the following sense: $A$ exhibits $(\epsilon, k)$-spectral decay if $\epsilon \sigma_{k}(A) \ge \sigma_{k+1}(A)$.
+\begin{lemma}
+    If $A$ exhibits $(\epsilon, k)$ spectral decay, then for all $b$, we have that 
+    \[
+        \eta_{k, \varnothing}(A, b) \le (1-\frac{1}{(1+\epsilon^2)^{nk}}) \|b\|^2 + \frac{1}{(1+\epsilon^2)^{nk}}\ell_k(A, b).
+    \]
+\end{lemma}
+\begin{proof}
+    It suffices here to show that 
+    \[
+        p = \frac{\prod_{i=1}^k \sigma_i^2}{c_k^n(A^{\intercal}A)} \ge (1+\epsilon^2)^{nk}.
+    \]
+
+    Equivalently, we can show that
+    \[
+        \frac{c_k^n(\Sigma^2)}{\det(\Sigma|_{[k]})^2} \le (1+\epsilon)^{nk},
+    \]
+    We expand $c_k^n$ out as a sum over $S \in \ksets$, and reindex the summation to be over $|S \Delta [k]|$ first.
+    \begin{align*}
+        c_k^n(\Sigma^2) = \sum_{\ell = 0}^k\sum_{S \in \ksets : |S \Delta [k]| = \ell} \prod_{i\in S}\sigma_i^2
+    \end{align*}
+
+    Now, notice that if $|S\Delta [k]| = \ell$, then $\prod_{i\in S}\sigma_i^2 \le \epsilon^{2\ell}\prod_{i=1}^k \sigma_i^2$.
+    There are $\binom{k}{\ell} \binom{n}{\ell}$ sets with the property that $|S\Delta [k]|$, so that 
+    \[
+        c_k^n(\Sigma^2) \le \prod_{i=1}^k \sigma_i^2 \left(\sum_{\ell=0}^k\epsilon^{2\ell}\binom{k}{\ell} \binom{n}{\ell}\right)
+    \]
+
+    Now, we note that 
+    \[
+        \binom{k}{\ell} \binom{n}{\ell} \le \binom{nk}{\ell},
+    \]
+    which follows from simply expanding out both sides.
+
+    Therefore, 
+    \[
+        c_k^n(\Sigma^2) \le \prod_{i=1}^k \sigma_i^2 \left(\sum_{\ell=0}^{nk}\epsilon^{2\ell}\binom{nk}{\ell}\right) = \det(\Sigma|_{[k]}^2) (1+\epsilon^2)^{nk}.
+    \]
+    This gives the desired result. 
+\end{proof}
+
+\section{Compressed Sensing}
+In the compressed sensing problem, we consider $A \in \R^{m\times n}$, where $m < n$, and we are given the value 
+\[
+    Af + \epsilon,
+\]
+where $\|f\|_0 \le k \le m$, and $\epsilon$ is a noise term, chosen from $\mathcal{N}(0, \sigma^2I)$.
+
+Our goal is to recover $f$ from this information.
+
+In the existing literature, it is common to assume that $A$ has the restricted isometry property (RIP), which states that for all $S \in \binom{[n]}{2k}$, 
+\[
+    1-\delta \le \lambda_{min}(A^{\intercal}A|_S) \le 1-\delta.
+\]
+
+For instance, if the entries of $A$ are chosen from a normal distribution, it has been shown that with high probability $A$ will satisfy the RIP.
+
+We now consider the following:
+\begin{lemma}
+    Suppose that $A$ satisfies the RIP.
+
+    Let $i \in \supp(f)$ so that $f_i^2 \ge \frac{\|f\|^2}{k}$, and $j \not \in \supp(f)$, then
+    \[
+        \eta_{k, \{i\}}(A, Af+\epsilon) < \eta_{k, \{j\}}(A, Af+\epsilon),
+    \]
+    with probability at least 
+    \[
+            .
+    \]
+\end{lemma}
+\begin{proof}
+    Note that 
+    \[
+        \eta_{k, \{i\}}(A, v) < \eta_{k, \{j\}}(A, v),
+    \]
+    if and only if 
+    \[
+        \frac{\cnk{i}(A^{\intercal}A+vv^{\intercal})-\cnk{i}(A^{\intercal}A)}{\cnk{i}(A^{\intercal}A)} >
+        \frac{\cnk{j}(A^{\intercal}A+vv^{\intercal})-\cnk{j}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}
+    \]
+
+    And this is true if and only if
+    \[
+        \cnk{i}(A^{\intercal}A+vv^{\intercal}) - \cnk{i}(A^{\intercal}A) >
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}\big(\cnk{j}(A^{\intercal}A+vv^{\intercal})- \cnk{j}(A^{\intercal}A)\big)
+    \]
+    We first consider the term 
+    \[
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)} = \frac{\sum_{S \in \binom{[n]}{k}, i \in S} \det(A^{\intercal}A|_S)}{\sum_{S \in \binom{[n]}{k}, j \in S} \det(A^{\intercal}A|_S)}
+    \]
+    Let $K_x = \{{S \in \binom{[n]}{k}, x \in S}\}$.
+    We can form a bijection $\phi : K_i \rightarrow K_j$ by letting 
+    \[
+        \phi(S) = 
+        \begin{cases}
+            S \text{ if }S \in K_i \cap K_j\\
+            S - i + j  \text{ if }S \in K_i \setminus K_j
+        \end{cases}.
+    \]
+    We then claim that for any $S \in K_i$,
+    \[
+        (1-\delta)\det(A^{\intercal}A|_{\phi(S)}) \le \det(A^{\intercal}A|_S) \le (1+\delta)\det(A^{\intercal}A|_{\phi(S)}).
+    \]
+    This is clearly the case if $\phi(S) = S$. If $\phi(S) = S - i + j$, let $T = S - i$, and then notice that $A^{\intercal}A|_{\phi(T)}$ is a common submatrix of both $A^{\intercal}A|_{S}$ and $A^{\intercal}A|_{\phi(S)}$, so we have by the Cauchy interlacing theorem that
+    \[
+        \lambda_{1}(A^{\intercal}A|_S), 
+        \lambda_{1}(A^{\intercal}A|_\phi(S)) \le 
+        \lambda_1(A^{\intercal}A|_T) \le
+        \lambda_{2}(A^{\intercal}A|_S), 
+        \lambda_{2}(A^{\intercal}A|_\phi(S)) \le 
+        \lambda_2(A^{\intercal}A|_T) \le \dots
+        \lambda_{k-1}(A^{\intercal}A|_T) \le 
+        \lambda_{k}(A^{\intercal}A|_S), 
+        \lambda_{k}(A^{\intercal}A|_{\phi(S)})
+    \]
+    We now have, for example, that 
+    \begin{align*}
+        \det(A^{\intercal}A|_S) &= \prod_{i=1}^k \lambda_i(A^{\intercal}A|_S)\\
+                                &\le \lambda_{k}(A^{\intercal}A|_S)\prod_{i=1}^{k-1} \lambda_i(A^{\intercal}A|_T)\\
+                                &\le (1+\delta)\det(A^{\intercal}A|_T)
+        
+    \end{align*}
+
+    Similiar sequences of inequalities yield
+    \[
+        (1-\delta)\det(A^{\intercal}A|_T) \le \det(A^{\intercal}A|_S) \le (1+\delta)\det(A^{\intercal}A|_T).
+    \]
+    \[
+        (1-\delta)\det(A^{\intercal}A|_T) \le \det(A^{\intercal}A|_{\phi(S)}) \le (1+\delta)\det(A^{\intercal}A|_T).
+    \]
+    We can combine these inequalities to obtain
+    \[
+        \frac{1-\delta}{1+\delta}\det(A^{\intercal}A|_{\phi(S))} \le \det(A^{\intercal}A|_S)\le \frac{1+\delta}{1-\delta}\det(A^{\intercal}A|_{\phi(S))}.
+    \]
+
+    Summing over all $S \in \binom{[n]}{k}$ so that $i \in S$, we get
+    \[
+
+            \frac{1-\delta}{1+\delta}\cnk{j}(A^{\intercal}A) \le \cnk{i}(A^{\intercal}A) \le \frac{1+\delta}{1-\delta}{\cnk{j}(A^{\intercal}A)}.
+    \]
+
+    Now, we consider
+    \[
+        \cnk{x}(A^{\intercal}A+vv^{\intercal}) - \cnk{x}(A^{\intercal}A) = \sum_{S \in \binom{[n]}{k} : x \in S} \det(A^{\intercal}A|_S) v_S^{\intercal}(A^{\intercal}A|_S)^{-1}v_S
+    \]
+    for $x \in i, j$. We will show that for any $S \in K_i$, we have that
+    \[
+         \det(A^{\intercal}A|_S) v_S^{\intercal}(A^{\intercal}A|_S)^{-1}v_S \ge \something 
+         \det(A^{\intercal}A|_{\phi(S)}) v_S^{\intercal}(A^{\intercal}A|_{\phi(S)})^{-1}v_S.
+    \]
+    To do this, we expand 
+    \[
+        v_S^{\intercal}(A^{\intercal}A|_S)^{-1}v_S = 
+            f^{\intercal}A^{\intercal}A_S^{\intercal}(A^{\intercal}A|_S)^{-1}A_SAf = \|\Pi_SAf\|^2.
+    \]
+    We will show that 
+    \[
+        \|\Pi_SAf\|^2 \ge \|\Pi_{S-i}Af\|^2 + \frac{1-\delta}{k}\|Af\|^2,
+    \]
+    whereas
+    \[
+        \|\Pi_{\phi(S)}Af\|^2 \le \|\Pi_{S-i}Af\|^2 + 2\delta\|Af\|^2,
+    \]
+
+    Here, $\Pi_S = A_S(A^{\intercal}A|_S)^{-1}A_S$ is the projection onto the column space of $A_S$.
+
+
+\end{proof}
+
+
+\bibliographystyle{plain}
+\bibliography{main}
+\end{document}
+
+

@@ -1,0 +1,75 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=.8in]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr, multicol}
+\usepackage{float}
+\fancyhead[L]{\LARGE{}}
+\fancyhead[C] {\LARGE{Computing Sums of Powers of Determinants.}}
+\fancyhead[R]{\LARGE{}}
+
+\author{}
+\title{Computing Sums of Powers of Determinants.}
+
+%Set up fancy headers.
+\pagestyle{fancy}
+\usepackage{amsmath, amsthm, amsfonts, amssymb}
+\usepackage{defs}
+\usepackage[parfill]{parskip}
+
+%Define theorem formatting
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+% Declare some common abbreviations
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Hom}{\textbf{\text{Hom}}}
+\newcommand{\PP}{\textbf{P}}
+\newcommand{\SPACE}{\textbf{SPACE}}
+\newcommand{\NP}{\textbf{NP}}
+\newcommand{\SAT}{\textbf{SAT}}
+\newcommand{\pard}[2]{\frac{\partial #1}{\partial #2}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\st}{{\text{ s.t. }}}
+\newcommand{\ksets}{{\binom{[n]}{k}}}
+
+
+\begin{document}
+We seek to compute polynomials of the form
+\[
+    c_{n,k\ell} = \sum_{S \in \ksets} \det(X|_S)^{\ell}
+\]
+
+One way to compute this is to notice that $\det(X|_S)$ is the diagonal entry in the wedge power $\wedge^k X$ corresponding to the set $S$.
+
+Therefore, we can equivalently think of this as computing
+\[
+    c_{n,k\ell} = \tr((\diag(\wedge^k X))^{\ell})
+\]
+Let $G$ be a subgroup of $\{-1, 1\}^n$ with the property that for any sets $A, B \in \ksets$ so that $A \neq B$, there is some element $x \in G$ so that 
+\[
+    \prod_{i \in A} x_i \neq 
+    \prod_{i \in B} x_i.
+\]
+
+We then have that
+\[
+    \diag(\wedge^k X) = \sum_{x \in G} \wedge^k (D_xXD_x),
+\]
+where $D_x$ is the sign matrix where $(D_x)_{ii} = x_i$.
+
+We then have that 
+\begin{align*}
+    c_{n,k\ell} &= \tr((\diag(\wedge^k X))^{\ell})\\
+                &= \sum_{x_1 ,\dots, x_{\ell} \in G} \tr\left(\wedge^k \left(\prod_{i=1}^{\ell}D_{x_i}XD_{x_i}  \right) \right)\\
+                &= \sum_{x_1 ,\dots, x_{\ell} \in G} c_{n,k}\left(\prod_{i=1}^{\ell}D_{x_i}XD_{x_i}\right)
+\end{align*}
+Each term in the sum requires $O(\poly(n,k,\ell))$  time to compute, and there are $|G|^{\ell}$ terms to compute.
+
+So, how small can we make the group $G$? Can it be made of size $\poly(n, k)$? Then at least for fixed $\ell$, this computation can be done in polynomial time.
+\end{document}
