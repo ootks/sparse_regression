@@ -81,26 +81,20 @@
 \DeclareMathOperator{\argmin}{argmin}
 \DeclareMathOperator{\argmax}{argmax}
 
-\title{Quadratic Programs with Sparsity Constraints Via Polynomial Roots}
+\title{A Convex Method for Improved Conditioning via Diagonal Congruence}
 \date{\today}
 
 \author{Kevin Shu}
 \address[Kevin Shu]{School of Mathematics, Georgia Institute of Technology, 686 Cherry Street, Atlanta, GA 30332, USA}
 \email{kshu8@gatech.edu}
 
-\thanks{We would like to thank Greg Blekherman, Santanu Dey, and Shengding Sun for many insightful conversations. Much of the computational experiments supporting this paper were conducted at the Max Planck Institute for Mathematics in the Sciences.}
+\thanks{}
 
 \begin{document}
 
 \begin{abstract}
-    Quadratic constrainted quadratic programs (QCQPs) are an expressive family of optimization problems that occur naturally in many applications.
-    It is often of interest to seek out \emph{sparse} solutions, where many of the entries of the solution are zero.
-    This paper will consider QCQPs with a single linear constraint, together with a sparsity constraint that requires that the set of nonzero entries of a solution be small.
-    This problem class includes many fundamental problems of interest, such as sparse versions of linear regression and principal component analysis, which are both known to be very hard to approximate.
-    We introduce a family of tractible approximations of such sparse QCQPs using the roots of polynomials which can be expressed as linear combinations of principal minors of a matrix.
-    These polynomials arose naturally from the study of hyperbolic polynomials.
-    Our main contributions are formulations of these relaxations and computational methods solving these relaxations.
-    We will also give numerical evidence that these methods can be effective on practical problems.
+    Diagonal rescalings of matrices are a natural approach to improve condition numbers of matrices.
+    Here, we will consider a convex method for improving the condition number of a positive definite matrix by diagonal 
 \end{abstract}
 
 \maketitle
@@ -199,7 +193,6 @@ For a univariate polynomial $g(t)$, denote by $\eta_g$ the maximum real root of 
 \end{theorem}
 The condition that $A_1$ be positive definite can be relaxed if the polynomial in question satisfies an additional condition known as \emph{PSD-stability}. 
 In this case, it is also possible to introduce multiple constraints, which we will discuss in \Cref{sec:hyperbolic}.
-There, we will also give a very crude analysis of the approximation quality of these methods relative to the true value of \Cref{eq:sparse_qcqp}.
 
 Using this observation, we can produce heuristics for this problem, which greedily constructs the set $S$ in \Cref{eq:sparse_qcqp_2} using a family of LPM polynomials.
 We will also present specialized heuristics for sparse linear regression and sparse principal components analysis.
@@ -272,7 +265,7 @@ This theorem actually can be extended somewhat to give a continuous optimization
     where $g_D = p_D(A_1t - A_0)$.
 \end{theorem}
 \Cref{thm:root_thm} is the starting point for a number of results. 
-In \Cref{subsec:heuristic}, we will give a method for efficiently finding a feasible $x$ whose value in \Cref{eq:sparse_qcqp} matches the one guaranteed by \Cref{thm:root_thm}.
+In \Cref{subsec:heuristic}, we will give a method for efficiently finding a feasible $x$ whose value in \Cref{eq:sparse_qcqp} matches the one guaranteed by \Cref{thm:root_thm}?
 In \Cref{sec:hyperbolic}, we will also describe a way to generalize theorem \ref{thm:root_thm} to cases with multiple constraints, and when $A_1$ is not positive definite.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -443,7 +436,7 @@ In \Cref{lem:char_comp}, we described a method for computing $c_n^k$ using the F
 However, this method is numerically unstable in practice, so for our experiments, we will instead use the slower but more stable method of computing $c_n^k(X)$ by first computing the eigenvalues of $X$ and then computing the degree $k$ elementary symmetric polynomial in these eigenvalues.
 
 Notice that \Cref{alg:greedy} is easily parallelizable, as we are computing a maximum over all elements in $[n]$ in each round, and each such computation can be done in parallel.
-However, we do not do this parallelization, as our goal is primarily to demonstrate that the method performs well in terms of the final value it produces.
+However, we do not do this parallelization, as our goal is primarily to demonstrate that the method performs well in terms of score.
 We expect that with further work, these methods could be made much faster, which we discuss in \Cref{sec:faster}.
 
 \subsection{Experimental Results for Sparse Linear Regression}
@@ -694,27 +687,27 @@ We wish to consider a more detailed time complexity analysis when the polynomial
 \begin{proof}
     There are a number of ways of computing $c_n^k$. For this result, we will appeal to the well known Faddeev-LeVerrier method, which has time complexity $O(kn^{\omega})$ \cite{baer2021faddeev}. In practice, this method is incredibly numerically unstable, and so, it is often more effective to first compute the eigenvalues of $X$, and the compute the degree $k$ elementary symmetric polynomial in those eigenvalues.
 
-    Once we have this, the remainder of the proof procedes much as in the proof of \Cref{lem:new_oracle}, except that we note that 
+    Once we have this, the remainder of the proof procedes much as in the previous proof, except that we note that 
     \[
         p_{-T}(X) = c_n^{k-|T|}(X).
     \]
-    This allows us to replace the $k+1$ oracle calls needed in the previous lemma with a single computation of $c_n^{k-|T|}(X)$.
+    This allows us to replace the $k+1$ oracle calls needed in the previous lemma with a single oracle call.
 \end{proof}
 
 \begin{lemma}
     \label{lem:newton}
-    Let $g(t)$ be a univariate polynomial with only real roots, and let $r$ be the largest root of $g(t)$.
+    Let $g(t)$ be a univariate polynomial with only real roots, and let $r$ be the largest root of $g(t)$. Further suppose that all roots of $g$ are real.
     Then we can compute $s$ which is satisfying $r \le s \le r + \epsilon$ in a number of arithmetic operations which is at most
     \[
         O(k^2\log(\frac{t_0-r}{\epsilon}))
     \]
 \end{lemma}
 \begin{proof}
-    We will consider applying the Newton iteration by taking
+    We will consider applying the Newton iteration given by taking
     \[
         x_{n+1} = x_n - \frac{g(x_n)}{g'(x_n)},
     \]
-    starting at $x_1 = t_0$. Each step requires $O(k)$ arithmetic operations to compute $g$, and we wish to argue that after $k\log(\frac{g(t_0)}{\epsilon})$ steps, we will reach the largest root.
+    starting at $t_0$. Each step requires $O(k)$ arithmetic operations to compute $g$, and we wish to argue that after $k\log(\frac{g(t_0)}{\epsilon})$ steps, we will reach the largest root.
 
     This method is clearly shift invariant, so for the analysis, we may assume that the largest root of $g$ is at 0. We then have that
     \[
@@ -752,6 +745,12 @@ We wish to consider a more detailed time complexity analysis when the polynomial
         O(k^2\log(\frac{1}{\epsilon}))
     \]
 
+    The total computation then requires 
+    \[
+        O(k^2\log(\frac{1}{\epsilon}))
+    \]
+    arithmetic operations.
+    
     Therefore, computing each $\eta_{p|_T}$ requires 
     \[
         O(k^2(n^{\omega} + \log(\frac{1}{\epsilon})))
@@ -798,7 +797,9 @@ Our main result in this section is a proof of \Cref{thm:sparse_reg_closed_form}
     \[p(A^{\intercal}A y - A^{\intercal}bb^{\intercal}A) = 0.\]
 
     Notice that when $y = 0$, we obtain the polynomial $p(A^{\intercal}bb^{\intercal}A)$. Now, notice that $X = A^{\intercal}bb^{\intercal}A$ is rank 1, and therefore, $\det(X|_S)$ vanishes to order $k-1$ at this point.
-    Because $p$ is a linear combination of determinants, $p$ must then have a root of multiplicity at least $k-1$ at 0.
+    Because $p$ is a linear combination of determinants, $p$ must then have a root of multiplicity at least $k-1$ at 0. This implies that 
+
+    Therefore, either $p$ is identically 0, or
 
     Because $p(A^{\intercal}A) \neq 0$, and $A^{\intercal}A$ is positive semidefinite, we have that any root of this polynomial must be nonnegative, so we have that
     \[
@@ -831,7 +832,7 @@ We can apply this closed form solution to making improvements to \Cref{alg:greed
 \end{proof}
 
 
-We now show that this closed form solution is equivalent to the probabilistic result in \Cref{thm:probabilistic_eq}.
+We now show that this is equivalent to the probabilistic result in \Cref{thm:probabilistic_eq}.
 \begin{proof}[Proof of \Cref{thm:probabilistic_eq}]
     We first recall the so-called matrix determinant lemma, which states that for any invertible $X \in \R^{n\times n }$ and $v \in \R^{n}$
     \[
@@ -882,7 +883,7 @@ We show the following lemma:
         c_n^k(t I - X) = \frac{d^{n-k}}{dt^{n-k}}\det(tI - X).
     \]
 
-    Rolle's theorem implies that for a real rooted polynomial $g(t)$ with roots $r_1, \dots, r_d$, $g'(t)$ is real rooted with roots $s_1, \dots, s_{d-1}$ with the property that for $i \in [d-1]$ \cite{kummer2015hyperbolic},
+    Rolle's theorem implies that for a real rooted polynomial $g(t)$ with roots $r_1, \dots, r_d$, $g'(t)$ is real rooted with roots $s_1, \dots, s_{d-1}$ with the property that for $i \in [d-1]$ \cite{TODO},
     \[
         r_i \le s_i \le r_{i+1}.
     \]
@@ -935,47 +936,6 @@ However, even for nonsparse QCQPs with multiple constraints, it is a difficult q
 It seems like it would be even harder to recover a sparse solution from our hyperbolicity cone relaxation.
 
 For these reasons, for our main results, we only work in the 1 constraint case.
-
-\subsection{Approximation Guarantees}
-We will use the ideas contained in this section and in \cite{blekherman2022hyperbolic} to obtain some approximation guarantees for our methods.
-\begin{theorem}
-    Let $\mathcal{Q}$ be a sparse QCQP with $A_1$ being positive definite with $\Delta = \binom{[n]}{k}$. Let $p = c_n^k$. Then the optimal value of $\mathcal{Q}$ is at most
-    \[
-        C_1\eta_{p} + C_2,
-    \]
-    where
-    \[
-        C_1 =\left(1+ \frac{(n-k)\tr(A_1)}{\lambda_{min}(A_1)n(k-1)}\right) \text{, and}
-    \]
-    \[
-        C_2 = \frac{(n-k)\tr(A_0)}{\lambda_{min}(A_1)n(k-1)}.
-    \]
-\end{theorem}
-\begin{proof}
-    From our previous discussion, we have that
-    \[
-        A_1 \eta_p - A_0 \in \Lambda_I(p).
-    \]
-    In \cite{blekherman2022hyperbolic}, it was shown that for any $X \in \Lambda_I(p)$, $X + \frac{(n-k)\tr(X)}{n(k-1)}I \succeq 0$. Therefore,
-    \[
-        A_1 \eta_p - A_0 + \frac{(n-k)\tr(A_1 \eta_p + A_0)}{n(k-1)}I \succeq 0.
-    \]
-    Now, we have that $\frac{1}{\lambda_{min}(A_1)} A_1 \succeq I$, so we also know that
-    \[
-        A_1 \eta_p - A_0 + \frac{(n-k)\tr(A_1 \eta_p + A_0)}{\lambda_{min}(A_1)n(k-1)}A_1 \succeq 0.
-    \]
-    In particular,
-    \begin{align*}
-        y &= \eta_p  + \frac{(n-k)\tr(A_1 \eta_p + A_0)}{\lambda_{min}(A_1)n(k-1)}\\
-         &= 
-        \left(1+ \frac{(n-k)\tr(A_1)}{\lambda_{min}(A_1)n(k-1)}\right)\eta_p  + \frac{(n-k)\tr(A_0)}{\lambda_{min}(A_1)n(k-1)}
-    \end{align*}
-    is a feasible point for \Cref{eq:sparse_sdp_dual}, and we have that $y$ is an upper bound on the optimal value of $\mathcal{Q}$.
-\end{proof}
-This result is somewhat crude, which is in part due to the fact that it only considers $\eta_p$, and not $\eta_{p|_T}$ for larger sets $T$.
-Indeed, it can be seen that just using $\eta_p$ as a lower bound for the value of $\mathcal{Q}$ often producecs very bad results, and making use of $\eta_{p|_T}$ as in \Cref{alg:greedy} is necessary to produce interesting results.
-Nevertheless, we make it explicit here as a starting point for more detailed analysis of \Cref{alg:greedy} in the future.
-u
 
 \section{Conclusions and Future Directions}
 Our results show that there is a fruitful connection between the roots of certain structured polynomials and sparse quadratic programming.
@@ -1038,8 +998,9 @@ This is not surprising in light of \Cref{sec:probabilistic}: it seems that our m
 However, our experimental results indicate that these methods should perform at least as well as LASSO in many cases.
 Therefore, we may ask
 \begin{question}
-    What structural properties of the matrices $A_1$ and $A_0$ lead to \Cref{alg:greedy} performing close to optimally relative to the true value of \Cref{eq:sparse_qcqp}?
+    Is there a natural probability distribution on matrices so that our greedy methods perform optimally with high probability?
 \end{question}
 \bibliographystyle{plain}
 \bibliography{biblio.bib}
 \end{document}
+

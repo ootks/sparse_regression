@@ -1,0 +1,231 @@
+\documentclass{amsart}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{fullpage}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tablefootnote}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{hyperref,cleveref,color,verbatim}
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{cor}[theorem]{Corollary}
+\newtheorem{conj}[theorem]{Conjecture}
+\newtheorem{question}[theorem]{Question}
+\newtheorem{false}[theorem]{False Statement}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem*{theorem*}{Theorem}
+
+\theoremstyle{definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{defi}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+\newcommand{\fS}{\mathfrak{S}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\tr}{\textup{tr}}
+\newcommand{\Ad}{\textup{Ad}}
+\newcommand{\GL}{\operatorname{{\mathbf GL}}}
+\newcommand{\gl}{\operatorname{gl}}
+\DeclareMathOperator{\cond}{cond}
+\newcommand{\FW}{\mathcal{F}\mathcal{W}}
+\renewcommand{\P}{\mathcal{P}}
+\newcommand{\M}{\mathcal{M}}
+
+%%%%% debatable notations %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand\Def[1]{\emph{#1}}%
+\newcommand\x{{x}}%
+\newcommand\X{{X}}%
+\newcommand\A{{A}}%
+\newcommand\I{{I}}%
+\renewcommand\a{{a}}
+\renewcommand\v{{v}}%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\DeclareMathOperator*{\adj}{adj}
+\DeclareMathOperator*{\Diag}{Diag}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\Block}{B}
+\DeclareMathOperator*{\Adj}{Adj}
+\DeclareMathOperator*{\Span}{span}
+\DeclareMathOperator*{\SO}{SO}
+\DeclareMathOperator*{\supp}{supp}
+\newcommand{\st}{{\text{ s.t. }}}
+\newcommand{\transpose}{\intercal}
+\DeclareMathOperator{\conv}{\operatorname{conv}}
+
+\newcommand*{\Sym}{\R^{n \times n}_{\mathrm{sym}}}
+
+\newcommand{\cL}{{\mathcal L}}
+\newcommand{\De}{\operatorname{D}}
+\newcommand\ks[1]{{\color{green}(Kevin: #1)}}
+
+
+\DeclareMathOperator{\adju}{\operatorname{adj}}
+\DeclareMathOperator{\argmin}{argmin}
+\DeclareMathOperator{\argmax}{argmax}
+
+\title{Minimizing Condition Number via Diagonal Congruence}
+\date{\today}
+
+\author{Kevin Shu}
+\address[Kevin Shu]{School of Mathematics, Georgia Institute of Technology, 686 Cherry Street, Atlanta, GA 30332, USA}
+\email{kshu8@gatech.edu}
+
+\thanks{}
+
+\begin{document}
+
+\begin{abstract}
+    We will consider a convex method for minimizing the condition number of a positive definite matrix by diagonal congruence.
+\end{abstract}
+
+\maketitle
+The condition number of an $n\times n$ positive definite matrix $X$ is given by
+\[
+    \cond(X) = \frac{\lambda_{max}(X)}{\lambda_{min}(X)}.
+\]
+This measures how far $X$ is from being invertible, and is always at least 1.
+
+One approach to preconditioning a matrix is to rescale it using diagonal congruence, that is for a diagonal matrix $D$, we want to consider 
+\[
+    \min_{D \text{ diagonal}}\cond(DXD).
+\]
+Diagonal congruence preserves many important properties of a matrix, but can improve the condition number significantly.
+\begin{theorem}
+    Let $X$ be a positive definite matrix. Consider the constrained convex minimization problem
+    \begin{equation}
+        \label{eq:opt1}
+        \begin{aligned}
+            \min\quad & t\\
+            \st &tD - X \succeq 0\\
+                &X - D \succeq 0\\
+                &D \succ 0\\
+                &D \text{ diagonal}.\\
+        \end{aligned}
+    \end{equation}
+    Let $D^*$ be the diagonal matrix optimizing this program, and let $t^*$ be the optimal value of this program.
+    \[
+        \min_{D \text{ diagonal}}\cond(DXD) = t^* = \cond((D^*)^{-1/2}X(D^*)^{-1/2}).
+    \]
+\end{theorem}
+\begin{proof}
+    Let $(t^*,D^*)$ be the optimal values of this program.
+    
+    Notice that because $X - D^* \succeq 0$, by diagonal congruence,
+    \[
+        (D^*)^{-1/2}X(D^*)^{-1/2} \succeq I,
+    \]
+    so that in particular, $\lambda_{min}((D^*)^{-1/2}X(D^*)^{-1/2}) \ge 1$.
+    
+    We also have that for any fixed $D$, when $t$ is minimized, $tD - X$ must be singular, or else we could deccrease $t$ and remain in the feasible region.
+    So, we see that
+    \[
+        t^*I \succeq (D^*)^{-1/2}X(D^*)^{-1/2},
+    \]
+    and that some eigenvalue of $(D^*)^{-1/2}X(D^*)^{-1/2}$ is $t$. From this, we obtain that $\lambda_{max}((D^*)^{-1/2}X(D^*)^{-1/2}) = t$.
+
+    Therefore, $\cond((D^*)^{-1/2}X(D^*)^{-1/2}) \ge t^*$.
+
+    On the other hand, let $D$ be any diagonal matrix minimizing $\cond(DXD)$. Because $\cond(DXD)$ is invariant to scaling $D$, we can assume $\lambda_{min}(DXD) = 1$.
+    Now, let $D^* = D^{-2}$, and let $t^* = \lambda_{max}(DXD)$. Then, we have that $D \succeq 0$,
+    \[
+        X - D^* \succeq 0 \Leftrightarrow DXD \succeq I,
+    \]
+    and
+    \[
+        t^*D^* - X \succeq 0 \Leftrightarrow t^* I \succeq DXD.
+    \]
+    Therefore, $(t^*, D^*)$ is a feasible point for this program, with value $\cond(DXD)$, as desired.
+
+\end{proof}
+Notice that the problem defined in \Cref{eq:opt1} is not convex, but for fixed $t$, this program is a semidefinite programming feasibility problem. We can then optimize this program by performing binary search to find the smallest $t$ so that there exists a diagonal matrix $D$ so that $tD - X \succeq 0$, $X - D \succeq 0$ and $D \succ 0$.
+
+
+We will also consider a related problem, of minimizing an analogue of condition number, namely 
+\[
+    \cond'(X) = \frac{\tr(X)}{\lambda_{min}(X)}.
+\]
+Clearly, we have that 
+\[
+    \cond(X) \le \cond'(X) \le n\cond'(X).
+\]
+
+We will see that $\cond'(X)$ can be formulated as a genuinely convex problem.
+\begin{theorem}
+    Let $X$ be a positive definite matrix. Consider the constrained convex minimization problem
+    \begin{equation}
+        \label{eq:opt}
+        \begin{aligned}
+            \min\quad & \tr(XD^{-1})\\
+            \st & X - D \succeq 0\\
+                &D \succ 0\\
+                &D \text{ diagonal}.\\
+        \end{aligned}
+    \end{equation}
+    Let $D^*$ be the diagonal matrix optimizing this program, and let $\kappa^*$ be the optimal value of this program.
+    \[
+        \min_{D \text{ diagonal}}\cond'(DXD) = \kappa^* = \cond'((D^*)^{-1/2}X(D^*)^{-1/2}).
+    \]
+\end{theorem}
+\begin{proof}
+    If $D^*$ is an optimizer for this quantity, we know that
+    \[
+        X - D^* \succeq 0.
+    \]
+    If $X - D^*$ is not singular, then clearly for some $\ell > 1$, we know that $\ell D^*$ is also feasible, and it will have a smaller objective value.
+    So, we may assume that this matrix is singular.
+
+    We can then perform a congruence transformation to see that
+    \[
+        (D^*)^{-1/2}X(D^*)^{-1/2} - I \succeq 0,
+    \]
+    and this matrix is also singular.
+
+    Therefore, 
+    \[
+        \lambda_{min}((D^*)^{-1/2}X(D^*)^{-1/2}) = 1.
+    \]
+    From this, we see that 
+    \begin{align*}
+        \cond'((D^*)^{-1/2}X(D^*)^{-1/2}) &= \frac{\tr((D^*)^{-1/2}X(D^*)^{-1/2})}{\lambda_{min}((D^*)^{-1/2}X(D^*)^{-1/2}) } \\
+        &= \tr((D^*)^{-1}X)\\
+        &= \kappa^*.
+    \end{align*}
+    Here, we have used the cyclic property of the trace.
+
+    Now, if $D$ is an invertible diagonal matrix, then there is some diagonal matrix $U$ so that $U$ has $\pm 1$ diagonal entries, and $DU$ is positive semidefinite.
+    We see then That
+    \[
+        \cond'(DXD) = \cond'(UDXDU),
+    \]
+    so let us assume $D$ is positive semidefinite.
+
+    Also notice that $\cond(DXD)$ is invariant to scaling $D$ by positive mutliples, so we may assume that $\lambda_{min}(DXD) = 1$.
+
+    So, let $D^* = D^{-2}$. Then because $DXD \succeq I$, $X - D^* \succeq 0$. Therefore, $D^*$ is a feasible point, and
+    \[
+        \tr(XD^{-1}) = \tr(DXD) = \cond'(DXD).
+    \]
+    This gives the desired result.
+\end{proof}
+The function $\tr(XD^{-1})$ is strictly convex when $D$ is positive definite, so this is in fact a convex minimization problem.
+\end{document}
+
