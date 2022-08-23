@@ -1,0 +1,246 @@
+\section{Effeciently Computing $\eta_{T, k}.$}
+We will be making use of a number of theorems from linear algebra, such as the matrix-determinant lemma for rank 1 updates to the determinant and the Schur complement lemma.
+All of these results can be found in any standard reference on linear algebra, and we recommend \cite{horn2012matrix}.
+\subsection{Linear Principal Minor Polynomials}
+In this section, we will define a family of polynomials whose properties we will be considering in detail throughout this paper.
+
+Let $\vec{a} = (a_S : S \in \binom{[n]}{k}) \in \R^{\binom{n}{k}}$, and let $X$ be a symmetric matrix of indeterminants.
+
+We will associate to $\vec{a}$ the \emph{linear principal minor} (lpm) polynomial $p_{\vec{a}}(X)$,
+\[
+    p_{\vec{a}}(X) = \sum_{S \in \binom{[n]}{k}} a_S\det(X|_S),
+\]
+where $X|_S$ denotes the principal submatrix of $X$ indexed by $S$.
+
+One key family of examples of such polynomials are the \emph{characteristic coefficients}, which are defined as
+\[
+    c_k^n(X) = p_{\vec{1}}(X) = \sum_{S \in \binom{[n]}{k}} \det(X|_S).
+\]
+Here, $\vec{1}$ denotes the all 1's vector.
+
+These arise naturally when considering the eigenvalues of a matrix, as we have the following formula for the characteristic polynomial of an $n\times n$ matrix:
+\[
+    \det(X + tI) = \sum_{k=0}^n c_{n-k}^n(X) t^k.
+\]
+
+In particular, we see that $c_k^n(X)$ invariant under change of basis, i.e. for any orthogonal matrix $U$, $c_k^n(X) = c_k^n(U^{\intercal}XU)$.
+
+One operation that we will need to perform on these polynomials is what we call \emph{conditioning}, which we will use in the next subsection to compute conditional expectations for weighted determinantal point processes.
+
+Given a lpm polynomial $p_{\vec{a}}$ of degree $k$, we define the conditioning of $p_{\vec{a}}$ on a set $T \subseteq [n]$ with $|T| \le k$ by
+\[
+    p_{\vec{a}, T}(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S} a_S \det(X|_S)
+\]
+We will want a formula for $p_{\vec{a}, T}$ in terms of $p_{\vec{a}}$.
+To do this, we will need to define the Schur complement of $X$ when $X$ is a symmetric matrix, and $T \subseteq [n]$. Suppose we have the following block structure for $X$,
+\[
+    X = 
+    \begin{pmatrix}
+        X|_T & X_{T, [n] \setminus T}\\
+        X_{[n] \setminus T, T} & X|_{[n] \setminus T}\\
+    \end{pmatrix}
+\]
+then the Schur complement of $X$ with respect to $T$ is
+\[
+    X \setminus T = X|_{[n]  - T} -  X_{[n] \setminus T, T} X|_{T}^{-1}X_{T, [n] \setminus T}.
+\]
+
+\begin{lemma}\label{lem:poly_cond}
+\[
+    p_{\vec{a}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X \setminus T) 
+\]
+\end{lemma}
+\begin{proof}
+    Firstly, it is possible to see from the polynomial expansion of the determinant that
+    \[
+        \frac{\partial}{\partial X_{ii}}\det(X|_S) = 
+        \begin{cases}
+            0 \text{ if }i \not \in S\\
+            \det(X|_{S \setminus i}) \text{ otherwise}.            
+        \end{cases}
+    \]
+    Therefore, we can see by induction that 
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}\det(X|_S) = 
+        \begin{cases}
+            0 \text{ if }T\not \subseteq S\\
+            \det(X|_{S \setminus T}) \text{ otherwise}
+        \end{cases}
+    \]
+    Hence, we have that 
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X) = \sum_{S \in \binom{[n]}{k} : T \subseteq S}
+        a_S \det(X|_{S \setminus T}).
+    \]
+
+    Next, we will need to use the following two facts about Schur complements: 
+    firstly, there is the Schur complement lemma, which states that
+    \[
+        \det(X) = \det(X|_T) \det(X \setminus T).
+    \]
+    Secondly, we have that Schur complements commute with taking submatrices, in that if $T \subseteq S \subseteq [n]$, then
+    \[
+        (X|_S) \setminus T = (X \setminus T)|_{S \setminus T}.
+    \]
+
+    Therefore, we see that 
+    \begin{align*}
+        \det(X|_T)\left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X \setminus T)
+        &= \sum_{S \in \binom{[n]}{k} : T \subseteq S}
+        a_S \det(X|_T)\det((X\setminus T)|_{S \setminus T})\\
+        &= \sum_{S \in \binom{[n]}{k} : T \subseteq S} a_S \det(X|_S)\\
+        &= p_{\vec{a}, T}(X)
+    \end{align*}
+
+    
+\end{proof}
+
+
+\subsection{Weighted Determinantal Point Processes}
+We now let $\vec{a} = (a_S : S \in \binom{[n]}{k}) \in \R_+^{\binom{n}{k}}$, so that these coefficients are assumed to be nonnegative.
+Let $M$ be a fixed positive semidefinite definite matrix.
+
+We define the weighted determinantal point process for this set of coefficients to be a proability distribution on $S \in \binom{[n]}{k}$ with probability mass function given by
+\[
+    \mu_{M, \vec{a}}(S) \propto a_S \det(M|_S).
+\]
+
+To relate this to sparse linear regression, we can imagine using the following randomized variant of sparse linear regression.
+Given the data $A$ and $b$, first draw a random subset $S$ according to $\mu_{AA^{\intercal}, \vec{a}}$, and then perform the regression using only the columns of $A$ in $S$.
+
+We can then notate the expected error produced by this randomized linear regression.
+\[
+    \eta_{\vec{a}, T, k}(A,b) = \E_{\mu_{AA^{\intercal},\vec{a}}} [\ell(A_S, b) | T \subseteq S].
+\]
+Once again, this expectation serves as an upper bound on the sparse linear regression problem.
+
+We can then relate this quantity $\eta_{\vec{a}, T, k}(A, b)$ to the lpm polynomial $p_{\vec{a}}$:
+\begin{theorem}
+    If $AA^{\intercal}$ has rank at least $k$, then
+\[
+     \eta_{\vec{a}, T, k}(A,b) =
+     \|b\|^2 - \frac{p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A)}{p_{\vec{a}, T}(AA^{\intercal})} + 1
+ \]
+\end{theorem}
+\begin{proof}
+    We first recall the so-called matrix determinant lemma \cite{TODO}, which states that for any invertible $X \in \R^{n\times n }$ and $v \in \R^{n}$
+    \[
+        \det(X + vv^{\intercal}) = (1+v^{\intercal}X^{-1}v)\det(X).
+    \]
+
+    This implies that
+    \begin{align*}
+        p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A) &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S + A^{\intercal}bb^{\intercal}A|_S)\\
+                                                                   &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S)\big(1+b^{\intercal}A_S(A^{\intercal}A|_S)^{-1}A_S^{\intercal}b\big)\\
+    \end{align*}
+
+    We also recall the closed form formula for $\ell(A,b)$ \cite{TODO}, given by
+    \[
+        \ell(A,b) = \|b\|^2 - b^{\intercal}A(A^{\intercal}A)^{-1}A^{\intercal}b.
+    \]
+
+    We can thus simplify the above expression and see that
+
+    \begin{align*}
+        p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A) &= \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A|_S)\big(1+\|b\|^2-\ell(A_S,b)\big)\\
+                                                                   &= (1+\|b\|^2)\left( \sum_{S \in \binom{[n]}{k}, T \subseteq S} a_S\det(A^{\intercal}A) \right) + \sum_{S \in \binom{[n]}{k}}\det(A)\ell(A|_S,b)\\
+                                                                   &= (1+\|b\|^2)p_{\vec{a}}(A^{\intercal}A) + \sum_{S \in \binom{[n]}{k}, T \subseteq S}\det(A^{\intercal}A|_S)\ell(A_S,b)\\
+    \end{align*}
+
+    We then have that
+
+    \begin{align*}
+        \frac{p_{\vec{a}, T}(A^{\intercal}A + A^{\intercal}bb^{\intercal}A)}{p_{\vec{a}, T}(A^{\intercal}A)} &= (1+\|b\|^2) + \big(\sum_{S \in \binom{[n]}{k}, T \subseteq S}\Pr(S)\ell(A_S,b)\big)\\
+                                                                                                      &= \|b\|^2 - 
+                                                                                                      \eta_{\vec{a}, T, k}(A, b) + 1
+    \end{align*}
+
+    Rearranging, we obtain the result.
+    
+\rend{proof}
+\begin{remark}
+    There is a rich literature concerning the proiblem of efficiently sampling from truncated determinantal point processes \cite{TODO}, but it is worth noting that sampling based approaches will not be effective at computing this quantity to the accuracy that we wish to compute it.
+
+   For instance, consider the unweighted case where $\vec{a} = \vec{1}$, and suppose that $A^{\intercal}A$ is such that for any $S \subseteq [n]$ with $|S| = k$, $\det(A^{\intercal}A|_S) = 1$.
+   In this case, we see that the determinantal point process selects elements from $\binom{[n]}{k}$ uniformly at random.
+   So, we can consider two cases: one in which $b$ is chosen to lie in the image of $A_S$, and one in which $b$ is chosen to be orthogonal to the image of $A$.
+   If we attempted to distinguish these two cases using sampling, we would need to take $\Omega(\binom{[n]}{k})$ samples before we could find that there is some $S$ so that $\ell(A_S, b) < \|b\|^2$.
+   On the other hand, by computing the expectation in these two cases, we could immediately detect which situation we are in.
+\end{remark}
+
+We have thus reduced the problem of computing $\eta_{\vec{a}, T, k}(A, b)$ to that of computing $p_{\vec{a}, T}$, which the following lemma makes formal.
+
+\begin{lemma}
+    If we can compute $p_{\vec{a}}(X)$ in $O(\tau)$ time for any complex symmetric matrix $X$, then we can compute  $\eta_{\vec{a}, T, k}(A, b)$ in $O(k\tau + k\log(k) + n^\omega)$ time, where $\omega$ denotes the matrix multiplication constant.
+\end{lemma}
+\begin{proof}
+    We have seen that in order to compute $\eta_{\vec{a}, T, k}(A, b)$, it suffices to compute $p_{\vec{a}, T}$ at $A^{\intercal}A$ and $A^{\intercal}A+A^{\intercal}bb^{\intercal}A$.
+
+    We have seen in lemma \ref{lem:poly_cond} that
+    \[
+        p_{\vec{a}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X \setminus T) 
+    \]
+    For symmetric matrices $X$, We can easily compute $X \setminus T$ and $\det(X|_T)$ in $n^{\omega}$ time, and so it remains to argue that we can compute 
+    \[
+         \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X)
+    \]
+    in the desired time.
+
+    If we let $D$ be the diagonal matrix so that $D_{ii} = \begin{cases} 1 \text{ if }i \in T\\0 \text{ otherwise}\end{cases}$, we can see that we can rewrite this expression as a directional derivative:
+    \[
+        \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{a}}(X) = \frac{d^{|T|}}{dt^{|T|}} p_{\vec{a}}(X + tD)|_{t = 0}. 
+    \]
+    Notice that $p_{\vec{a}}(X + tD)$ is a univariate polynomial in $t$ of degree $k$.
+    Therefore, if we can compute this function at $k$ distinct values of $t$, then we can uniquely recover all of the coefficients of this univariate polynomial via interpolation.
+    Computing this at any $k$ distinct values only requires $k\tau$ time.
+
+    In fact, using the Fast-Fourier transform \cite{TODO}, it is in fact possible to reconstruct all of the coefficients of this polnymial this $k\log(k)$ time from its evaluations it at all $2^{\lceil \log(k) \rceil}$ roots of unity.
+
+    Once we have all of the coefficients of $p_{\vec{a}}(X + tD)$, we can compute $\frac{d^{|T|}}{dt^{|T|}}$ in constant time by reading of the $|T|^{th}$ coefficient of this polynomial.
+    This gives the final time complexity given in the theorem.
+\end{proof}
+
+\subsection{Characteristic Coefficients}
+We will see that we can in fact obtain much faster methods when the polynomial in question is the characteristic coefficient defined above.
+
+In fact, there are a number of algorithms for computing the characteristic coefficients of a symmetric matrix.
+Here, we will use the the Fadeev-LeVerrier method for computing the characteristic coefficients, which has the advantage of not needing to compute all of the characteristic coefficients at once.
+\begin{lemma}
+    We can compute  $\eta_{\vec{1}, T, k}(A, b)$ in $O(kn^{\omega})$ time where $\omega$ is the matrix multiplication constant.
+\end{lemma}
+\begin{proof}
+We will once again make use of our result that
+\[
+    p_{\vec{1}, T}(X) = \det(X|_T) \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}p_{\vec{1}}(X \setminus T) 
+\]
+We will note that for the characteristic coefficients,
+\[
+    \left( \sum_{i \in T} \frac{\partial}{\partial X_{ii}} \right)^{|T|}c_k^n(X)  = c_{k-|T|}^{n-|T|}(X|_{[n] \setminus T})
+\]
+Therefore, 
+\[
+    p_{\vec{1}, T}(X) = \det(X|_T) c_k^n(X \setminus T) 
+\]
+
+The Fadeev-LeVerrier algorithm computes $c_k^n$ in $O(kn^{\omega})$ time \cite{}, and the result follows.
+\end{proof}
+
+\subsection{A Heuristic for Sparse Regression}
+We will focus this section on the unweighted determinantal point process, as that illustrates all of the relevant ideas, and is what we will use in our simulations.
+
+
+We can now present our heuristic for finding a sparse regressor.
+\begin{algorithm}
+    \caption{The $\eta$-greedy method}
+    \begin{algorithmic}\label{alg:greedy}
+        \State $T \gets \varnothing$
+        \For{$t = 1 \dots k$}
+            \State $j \gets \argmin \eta_{T+j, k}(A,b)$
+            \State $T \gets T + j$
+        \EndFor
+
+        \Return T
+    \end{algorithmic}
+\end{algorithm}
+We can think of method as follows: we will iteratively construct the set which we will use for regression.
+At each step, we will choose the element from $[n]$ which minimizes our expected error, if we condition on taking the elements we have already selected.

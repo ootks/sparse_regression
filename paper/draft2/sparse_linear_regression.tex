@@ -1,0 +1,180 @@
+\documentclass[a4paper]{article}
+\usepackage[margin=.8in]{geometry}
+\usepackage{graphicx}
+\usepackage{fancyhdr, multicol}
+\usepackage{float}
+\fancyhead[L]{\LARGE{}}
+\fancyhead[C]{\LARGE{Sparse Linear Regression with $S^{n,k}$}}
+\fancyhead[R]{\LARGE{}}
+
+\newcommand{\FW}{\mathcal{F}\mathcal{W}}
+
+\author{}
+\title{Sparse Linear Regression with $S^{n,k}$}
+
+%Set up fancy headers.
+\pagestyle{fancy}
+\usepackage{amsmath, amsthm, amsfonts, amssymb}
+\usepackage[parfill]{parskip}
+
+%Define theorem formatting
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+% Declare some common abbreviations
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Hom}{\textbf{\text{Hom}}}
+\newcommand{\PP}{\textbf{P}}
+\newcommand{\SPACE}{\textbf{SPACE}}
+\newcommand{\NP}{\textbf{NP}}
+\newcommand{\SAT}{\textbf{SAT}}
+\newcommand{\pard}[2]{\frac{\partial #1}{\partial #2}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\tr}{tr}
+\newcommand{\st}{{\text{ s.t. }}}
+
+\begin{document}
+\maketitle
+
+The sparse linear regression problem is to find
+\[
+    \min \{\|Ax - b\|^2 : x \in \R^n, \|x\|_0 \le k\},
+\]
+where $A \in \R^{n,m}$ and $b\in \R^m$, and $\|x\|_0$ denotes the number of nonzero entries of $x$. This is an NP-hard problem.
+
+It is shown in \cite{subset} that this can be expressed as a convex optimization problem:
+\begin{equation}\label{eq:cvx_prg}
+\begin{aligned}
+    \alpha = 
+    \text{minimize} &&\|b\|^2 - \tr(XA^{\intercal}bb^{\intercal}A)\\
+    \text{such that } && \tr(AA^{\intercal}X) = 1\\
+                      && X \in \FW^{n,k}
+\end{aligned}
+\end{equation}
+That is, the optimum of this program is of the form $\alpha xx^{\intercal}$ where $x$ is the optimal solution to the original sparse linear regression problem.
+
+For my own sake, I'll include a proof that this works at the end in Lemma \ref{lem:convex}.
+
+Let $H^{n,k}$ denote the hyperbolicity cone of the characteristic coefficient $c_{n,k}$, and let $C^{n,k}$ denote the dual of $H^{n,k}$.
+Consider the modified program defined as 
+\begin{equation}\label{eq:tight}
+    \alpha_H = 
+\begin{aligned}
+    \text{minimize} &&\|b\|^2 - \tr(XA^{\intercal}bb^{\intercal}A)\\
+    \text{such that } && \tr(AA^{\intercal}X) = 1\\
+                      && X \in C^{n,k}
+\end{aligned}.
+\end{equation}
+\begin{theorem}
+    Let $\chi(AA^{\intercal})$ denote the condition number of $AA^{\intercal}$, then
+   \[
+       \alpha_H \ge \alpha \ge  (1+\frac{n-k}{(k-1)}\chi(AA^{\intercal}))\alpha_H.
+   \]
+\end{theorem}
+\begin{proof}
+
+We know that $C^{n,k} \subseteq \FW^{n,k}$, so that $\alpha_H \ge \alpha$.
+
+We know that for any $X \in \FW^{n,k}$, $X + \frac{n-k}{(k-1)n}\tr(X)I \in C^{n,k}$. Moreover, if $X$ is a feasible point for Equation \ref{eq:cvx_prg}, then so is
+\[
+    \frac{1}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\left(X + \frac{n-k}{(k-1)n}\tr(X)I\right).
+\]
+
+We see then that this is a feasible point for Equation \ref{eq:tight}, whose value is 
+\begin{align*}
+    \|b\|^2 - \frac{1}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\tr\left(A^{\intercal}bb^{\intercal}A    \left(X + \frac{n-k}{(k-1)n}\tr(X)I\right)\right)\\
+    = 
+    \frac{1}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\left( \|b\|^2 - \tr\left(A^{\intercal}bb^{\intercal}A    X  \right)\right) + \\
+        \frac{\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\left( \|b\|^2 - \frac{\tr\left(A^{\intercal}bb^{\intercal}A\right)}{\tr(AA^{\intercal})}\right)\\
+    = 
+    \frac{\alpha}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})} + \frac{\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\left( \|b\|^2 - \frac{\tr\left(A^{\intercal}bb^{\intercal}A\right)}{\tr(AA^{\intercal})}\right)\\
+    \ge \alpha_H
+\end{align*}
+Notice that 
+\[
+    \frac{\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}{1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal})}\left( \|b\|^2 - \frac{\tr\left(A^{\intercal}bb^{\intercal}A\right)}{\tr(AA^{\intercal})}\right) \ge 0
+\]
+
+Therefore, in particular, 
+\[
+    (1+\frac{n-k}{(k-1)n}\tr(X)\tr(AA^{\intercal}))\alpha_H \le \alpha
+\]
+
+Finally, we note that $\tr(AA^{\intercal}X) = 1$, so $\lambda_{min}(AA^{\intercal})\tr(X) \le 1$, and therefore
+\[
+    (1+\frac{n-k}{(k-1)}\frac{\tr(AA^{\intercal})}{n\lambda_{min}(AA^{\intercal})})\alpha_H \le \alpha.
+\]
+Finally, notice that $\tr(AA^{\intercal}) \le n\lambda_{max}(A)$, so $\frac{\tr(AA^{\intercal})}{\lambda_{min}(AA^{\intercal})} \le n\chi(A)$, and we have shown the theorem.
+
+\end{proof}
+
+
+
+\begin{lemma}\label{lem:convex}
+    The convex optimization problem in Equation \ref{eq:cvx_prg} solves the sparse linear regression problem.
+\end{lemma}
+\begin{proof}
+    We can rewrite the objective above as
+    \[
+        \|Ax - b\|^2 = \tr(A^{\intercal}Axx^{\intercal}) - 2b^{\intercal}A^{\intercal}x + \|b\|^2
+    \]
+
+    Let $\lambda = \|x\|$, and let $y = \frac{x}{\lambda}$ then we have that 
+    \[
+        \|Ax - b\|^2 = \tr(A^{\intercal}Ay^{\intercal})\lambda^2 - 2b^{\intercal}Ay\lambda + \|b\|^2
+    \]
+    Minimizing this over $\lambda$ explicitly yields
+    \[
+        \min_{\|x\|_0 \le k} \|Ax - b\|^2 = \min_{y :\|y\|_0 \le k, \|y\| = 1}  \|b\|^2 - \frac{\tr(A^{\intercal}bb^{\intercal}Ayy^{\intercal})}{\tr(A^{\intercal}Ayy^{\intercal})}.
+    \]
+    We can normalize this by rescaling $y$ so that $\tr(A^{\intercal}Ayy^{\intercal} = 1$, resulting in the program
+        
+    \begin{equation}
+    \begin{aligned}
+        \text{minimize} &&\|b\|^2 - \tr(A^{\intercal}bb^{\intercal}Ayy^{\intercal})\\
+        \text{such that } && \tr(AA^{\intercal}yy^{\intercal}) = 1\\
+                          && \|y\|_0 \le k
+    \end{aligned}
+    \end{equation}
+
+    Taking convex hulls yields that this program is equivalent to
+        
+    \begin{equation}
+    \begin{aligned}
+        \text{minimize} &&\|b\|^2 - \tr(A^{\intercal}bb^{\intercal}AX)\\
+        \text{such that } && \tr(AA^{\intercal}X) = 1\\
+                          && X \in \FW^k_n.
+    \end{aligned}
+    \end{equation}
+
+\end{proof}
+\subsection{What if there is a really good sparse regressor?}
+The dual to the conic optimization problem
+\begin{equation}
+\begin{aligned}
+    \text{minimize} &&\|b\|^2 - \tr(XA^{\intercal}bb^{\intercal}A)\\
+    \text{such that } && \tr(AA^{\intercal}X) = 1\\
+                      && X \in K
+\end{aligned}
+\end{equation}
+is the problem
+\begin{equation}
+\begin{aligned}
+    \text{maximize} &&\|b\|^2 - y\\
+    \text{such that } && AA^{\intercal}y - A^{\intercal}bb^{\intercal}A  \in K^*\\
+\end{aligned}
+\end{equation}
+
+\begin{thebibliography}
+    
+    \bibitem{subset} Walid Ben-Ameur, José Neto, New bounds for subset selection from conic relaxations, European Journal of Operational Research, Volume 298, Issue 2, 2022, Pages 425-438.
+
+\end{thebibliography}
+
+\end{document}

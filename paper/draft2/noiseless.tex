@@ -1,0 +1,112 @@
+\newcommand{\cnk}[1]{c_{k, \{#1\}\}}^n}
+\begin{proof}
+    Let $v = Af + \epsilon$.
+
+    Note that 
+    \[
+        \eta_{k, \{i\}}(A, v) < \eta_{k, \{j\}}(A, v),
+    \]
+    if and only if 
+    \[
+        \frac{\cnk{i}(A^{\intercal}A+vv^{\intercal})-\cnk{i}(A^{\intercal}A)}{\cnk{i}(A^{\intercal}A)} >
+        \frac{\cnk{j}(A^{\intercal}A+vv^{\intercal})-\cnk{j}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}
+    \]
+
+    And this is true if and only if
+    \[
+        \cnk{i}(A^{\intercal}A+vv^{\intercal}) - \cnk{i}(A^{\intercal}A) >
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}\big(\cnk{j}(A^{\intercal}A+vv^{\intercal})- \cnk{j}(A^{\intercal}A)\big)
+    \]
+    We first consider the term 
+    \[
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)}
+        \frac{\cnk{i}(A^{\intercal}A)}{\cnk{j}(A^{\intercal}A)} = \frac{\sum_{S \in \binom{[n]}{k}, i \in S} \det(A^{\intercal}A|_S)}{\sum_{S \in \binom{[n]}{k}, j \in S} \det(A^{\intercal}A|_S)}
+    \]
+    Notice that we can form a bijection $\phi : \{{S \in \binom{[n]}{k}, i \in S}\} \rightarrow \{{S \in \binom{[n]}{k}, j \in S}\}$ by letting 
+    \[
+        \phi(S) = 
+        \begin{cases}
+            S \text{ if }S \in A_i \cap A_j\\
+            S - i + j  \text{ if }S \in A_i \setminus A_j
+        \end{cases}.
+    \]
+    We then claim that for any $S \in \binom{[n]}{k}$ so that $i \in S$,
+    \[
+        (1-\delta)\det(A^{\intercal}A|_{\phi(S)}) \le \det(A^{\intercal}A|_S) \le (1+\delta)\det(A^{\intercal}A|_{\phi(S)}).
+    \]
+    This is clearly the case if $\phi(S) = S$. If $\phi(S) = S - i + j$, let $T = S - i$, and then notice that $A^{\intercal}A|_{\phi(T)}$ is a common submatrix of both $A^{\intercal}A|_{S}$ and $A^{\intercal}A|_{\phi(S)}$, so we have by the Cauchy interlacing theorem that
+    \[
+        \lambda_{1}(A^{\intercal}A|_S), 
+        \lambda_{1}(A^{\intercal}A|_\phi(S)) \le 
+        \lambda_1(A^{\intercal}A|_T) \le
+        \lambda_{2}(A^{\intercal}A|_S), 
+        \lambda_{2}(A^{\intercal}A|_\phi(S)) \le 
+        \lambda_2(A^{\intercal}A|_T) \le \dots
+        \lambda_{k-1}(A^{\intercal}A|_T) \le 
+        \lambda_{k}(A^{\intercal}A|_S), 
+        \lambda_{k}(A^{\intercal}A|_{\phi(S)})
+    \]
+    We now have, for example, that 
+    \begin{align*}
+        \det(A^{\intercal}A|_S) &= \prod_{i=1}^k \lambda_i(A^{\intercal}A|_S)\\
+                                &\le \lambda_{k}(A^{\intercal}A|_S)\prod_{i=1}^{k-1} \lambda_i(A^{\intercal}A|_T)\\
+                                &\le (1+\delta)\det(A^{\intercal}A|_T)
+        
+    \end{align*}
+
+    Similiar sequences of inequalities yield
+    \[
+        (1-\delta)\det(A^{\intercal}A|_T) \le \det(A^{\intercal}A|_S) \le (1+\delta)\det(A^{\intercal}A|_T).
+    \]
+    \[
+        (1-\delta)\det(A^{\intercal}A|_T) \le \det(A^{\intercal}A|_{\phi(S)}) \le (1+\delta)\det(A^{\intercal}A|_T).
+    \]
+    Therefore, 
+    \[
+        \frac{1-\delta}{1+\delta}\det(A^{\intercal}A|_{\phi(S))} \le \det(A^{\intercal}A|_S)\le \frac{1+\delta}{1-\delta}\det(A^{\intercal}A|_{\phi(S))} = c_{n,k}(
+    \]
+    That is equal to
+    \[
+        \frac{1-\delta}{1+\delta}\det(A^{\intercal}A|_{\phi(S))} \le \det(A^{\intercal}A|_S)\le \frac{1+\delta}{1-\delta}\det(A^{\intercal}A|_{\phi(S))}.
+    \]
+
+    We therefore see that 
+    \[
+
+            \frac{1-\delta}{1+\delta}\cnk{j}(A^{\intercal}A) \le \cnk{i}(A^{\intercal}A) \le \frac{1+\delta}{1-\delta}{\cnk{j}(A^{\intercal}A)}
+    \]
+
+    We have by the RIP that 
+    \[
+        (1-\delta)^k \le \det(A^{\intercal}A|_S) \le (1+\delta)^k
+    \]
+    Therefore, for $x \in \{i,j\}$,
+    \[
+        \binom{n-1}{k-1}(1-\delta)^k \le \cnk{x}(A^{\intercal}A) \le \binom{n-1}{k-1}(1+\delta)^k.
+    \]
+    Therefore, it suffices to show that
+    \[
+        \cnk{i}(A^{\intercal}A+vv^{\intercal}) - \cnk{i}(A^{\intercal}A) >
+         \left(\frac{1+\delta}{(1-\delta)\right)^k\big(\cnk{j}(A^{\intercal}A+vv^{\intercal})- \cnk{j}(A^{\intercal}A)\big)
+    \]
+
+    By the matrix determinant lemma, we have that 
+    \[
+        \cnk{x}(A^{\intercal}A+vv^{\intercal})-\cnk{x}(A^{\intercal}A) = \sum_{S \in \binom{[n]}{k} : x \in S}\det(A^{\intercal}A|_S))v_S^{\intercal}(A^{\intercal}A|_S)^{-1}v_S
+    \]
+
+    We also want to consider
+    \[
+        \det(A^{\intercal}A|_T + vv^{\intercal}|_T)
+    \]
+    \begin{lemma}
+        \[
+            \sum_{S \in \binom{[n]}{k}: |S \Delta \supp(f)| = \ell} \det(A^{\intercal}A|_T + vv^{\intercal}|_T) \le  
+        \]
+        
+    \end{lemma}
+
+
+
+
+\end{proof}
