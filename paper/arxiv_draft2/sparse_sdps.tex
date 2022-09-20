@@ -156,17 +156,19 @@ where $A_1$ is PSD, then the optimum value of this program is equal to the maxim
 This can be seen by considering the dual semidefinite program and applying the fact that the determinant must be zero on the boundary of the PSD cone.
 We will modify these facts in the sparse setting by introducing sparse versions of the determinant, and applying them to solving sparse versions of QCQPs.
 
-We say that a polynomial $p$ in a symmetric matrix of indeterminants is a linear combination of principal minors (LPM) if it is not identically zero and it is of the form
+\begin{defi}
+We say that a polynomial $p$ in a symmetric matrix of indeterminants is a \emph{linear combination of principal minors (LPM)} if it is not identically zero and it is of the form
 \[
     p(X) = \sum_{S \subseteq [n] : |S| = k} a_S\det(X|_S),
 \]
 for some coefficients $a_S$, and where $X|_S$ denotes the principal submatrix of $X$ indexed by the set $S$.
-Such polynomials were studied in \cite{blekherman2021linear} for their connection to hyperbolic polynomials and convex optimization.
+\end{defi}
+LPM polynomials were studied in \cite{blekherman2021linear} for their connection to hyperbolic polynomials and convex optimization.
 In order to apply our methods, we will need as input an oracle that can efficently compute an LPM polynomial $p$ where all of the $a_S$'s are nonzero.
 
-The key examples of such polynomials is are the \emph{characteristic coefficients}, which are supported on $\binom{[n]}{k} = \{S \subseteq [n] : |S| = k\}$:
+The key examples of such polynomials is are the \emph{characteristic coefficients}:
 \[
-    c_n^k(X) = \sum_{S \in \binom{[n]}{k}} \det(X|_S).
+    c_n^k(X) = \sum_{S \subseteq [n] : |S| = k} \det(X|_S).
 \]
 The characteristic coefficients are so named because they are the coefficients of the characteristic polynomial of the matrix $X$ (we will refer to \cite{horn2012matrix} for such linear algebra facts).
 We will see that the characteristic coefficients have a number of properties which make it suitable for our methods, and also, it is possible to compute their values efficiently \cite{baer2021faddeev}.
@@ -390,9 +392,9 @@ In the case when $p = c_n^k$ is a characteristic coefficient, then we can bound 
     \label{thm:characteristic}
     When $p = c_n^k$, and $A_1 - A_0$ is positive definite, we can implement \Cref{alg:greedy} so that it computes a value which is at most $\eta_p + \epsilon$ using
     \[
-        O(k^3(n^{\omega+1} + n\log(\frac{1}{\epsilon})))
+        O(kn^3 + k^2n^{\omega} + n\log(\frac{1}{\epsilon})))
     \]
-    arithmetic operations in exact arithmetic.
+    arithmetic operations.
 \end{theorem}
 
 In practice, numerical issues will lead to difficulties in performing these computations in exactly the way described in this document. We will discuss ways of working around these issues in \Cref{subsec:expReg} and \Cref{subsec:expPCA}.
@@ -739,6 +741,47 @@ To do this, we will require some lemmas.
         \eta_{p|_{T + i}} \ge t \ge \eta_{p|_T}.
     \]
 \end{proof}
+To proceed, we will want two definitions and some technical lemmas.
+\begin{defi}
+    For $T \subseteq [n]$, let the \emphSchur complement} of the matrix $X$ with respect to $T$ be
+    \[
+    X \setminus T = X|_{[n] - T} - X_{[n]-T,T} X|_T^{-1} X_{T,[n]-T},
+    \]
+    Here, $X_{[n]-T,T}$ denotes the nonprincipal submatrix of $X$ whose rows are indexed by $[n] - T$ and whose columns are indexed by $T$.
+\end{defi}
+\begin{defi}
+    For an LPM polynomial $p$, define
+    \[
+        p_{-T}(X) = \sum_{S \in \Delta : T \subseteq S} a_S\det(X|_{S\setminus T}).
+    \]
+\end{defi}
+
+\begin{lemma}
+    \label{lem:schurCompCond}
+    \[
+        p|_T(X) = \det(X|_T) p_{-T}(X \setminus T).
+    \]
+\end{lemma}
+\begin{proof}
+    To prove this, we will need to recall the Schur complement determinant identity.
+    \[
+    \det(X|_T) \det(X \setminus T) = \det(X).
+    \]
+
+    We also crucially have the property that Schur complements commute with taking submatrices: if $T \subseteq S$, then
+    \[
+        (X \setminus T)|_{S \setminus T} = (X|_S)\setminus T.
+    \]
+
+    From this, we see that 
+    \begin{align*} 
+    \det(X|_T) p_{-T}(X \setminus T)&=\sum_{S \in \Delta : T \subseteq S} a_S \det(X|_T)\det((X \setminus T)|_{S\setminus T})\\
+            &=\sum_{S \in \Delta : T \subseteq S} a_S \det(X|_S)\\
+            &=p|_T(X),
+    \end{align*}
+    as desired.
+
+\end{proof}
 \begin{lemma}
     \label{lem:new_oracle}
     Fix some LPM polynomial $p$ of degree $k$.
@@ -746,28 +789,10 @@ To do this, we will require some lemmas.
     Then we can compute the value of $p|_T$ for any matrix $X$ using at most $(k+1)$ calls to the oracle and $O(n^{\omega})$ additional arithmetic operations, where $\omega$ is the matrix multiplication constant.
 \end{lemma}
 \begin{proof}
-    To prove this, we will need to recall the Schur complement determinant identity.
-    For $T \subseteq [n]$, the Schur complement of the matrix $X$ with respect to $T$ is
+    We refer to \Cref{lem:schurCompCond}.
+    We can compute both $\det(X|_T)$ and $X \setminus T$ using at most $O(n^{\omega})$ arithmetic operations, so it remains to compute $p_{-T}(X)$ using at most $k+1$ oracle calls. To do this, notice that
     \[
-    X \setminus T = X|_{[n] - T} - X_{[n]-T,T} X|_T^{-1} X_{T,[n]-T},
-    \]
-    and we have that
-    \[
-    \det(X|_T) \det(X \setminus T) = \det(X).
-    \]
-
-    We also crucially have the property that Schur complements commute with taking submatrices: if $T \subseteq S$, then
-    \[
-    (X \setminus T)|_{S \setminus T} = (X|_S)\setminus T.
-    \]
-    Define $p_{-T}(X) = \sum_{S \in \Delta : T \subseteq S} a_S\det(X|_{S\setminus T})$, then from our previous lemmas,
-    \[
-    p|_T(X) = \det(X|_T) p_{-T}(X \setminus T).
-    \]
-
-    We can compute both $\det(X|_T)$ and $X \setminus T$ using at most $O(n^{\omega})$ arithmetic operations, so it remains to compute $ p_{-T}(X)$ using at most $k+1$ oracle calls. To do this, notice that
-    \[
-    \frac{\partial }{\partial X_{ii}} \det(X|_S) = \begin{cases} 0 \text{ if }i \not \in S\\ \det(X|_{S - i}) \text{ if } i \in S \end{cases}.
+        \frac{\partial }{\partial X_{ii}} \det(X|_S) = \begin{cases} 0 \text{ if }i \not \in S\\ \det(X|_{S - i}) \text{ if } i \in S \end{cases}.
     \]
     From this, and extending by linearity, we get that
     \[
@@ -1248,10 +1273,10 @@ Given these two methods, we can state our faster heuristic algorithm in \Cref{al
 
         \For{$t = 1 \dots k$}
             \For{$i = 1 \dots \ell$}
-            \State v$^{(i)}$ = Conditionals$(X^{(i)}, D^{(i)}, Q^{(i)})$.
+            \State v$^{(i)}$ = Conditionals$(X^{(i)}, \Lambda^{(i)}, Q^{(i)})$.
             \EndFor
             \For{$j = 1 \dots n$}
-            \State $p$ = Interpolate(detT$_1\cdot$conditionals$^{(1)}_j$ ,\dots, detT$_{\ell}\cdot$conditionals$^{(\ell)}_j$)
+            \State $p$ = Interpolate(detT$_1\cdot$v$^{(1)}_j$ ,\dots, detT$_{\ell}\cdot$v$^{(\ell)}_j$)
                 \State $\eta_j = $MaxRoot($p$)
             \EndFor
             \State $j=\argmax \eta_j$.
@@ -1266,6 +1291,14 @@ Given these two methods, we can state our faster heuristic algorithm in \Cref{al
         \EndProcedure
     \end{algorithmic}
 \end{algorithm}
+\begin{proof}
+    To show that this is correct, we just need to show by induction that $\text{detT}_i v^{(i)}_j = p|_{T + j}(A_1t_i - A_0)$ at each round of this algorithm.
+    In the first round, this is clear from the definition of the Conditionals method, and the fact that $\text{detT}_i = 1$.
+    In each subsequent round, we have that 
+    \[
+        p|_T(X^{{(i)}) = \text{detT}_i v(X^{(i)})
+    \]
+\end{proof}
 
 The main idea of \Cref{alg:faster} is to maintain a set of evaluation matrices, the $X^{(i)} = A_1t_i - A_0$, where we will evaluate our conditional polynomials.
 The precise values of these evaluation matrices are theoretically not so important, so long as there are sufficiently many $t_i$'s, so that we can use these evaluations to interpolate the univariate polynomial $p|_T(A_1t-A_0)$.
@@ -1276,7 +1309,7 @@ To show that this algorithm is correct, we must show that in fact $\text{detT}_i
 Once we know that the algorithm is correct, its runtime is not too hard to understand. For general  $A_0$ and $A_1$, we need to select $\ell = k$ evaluation points, so that we have the following:
 \begin{theorem}
     \label{thm:alg_runtime_general}
-    \Cref{alg:faster} finishes its computation using at most $O(kn^3 + k^2(n^{\omega}+n\log(n)))$ arithmetic operations.
+    \Cref{alg:faster} finishes its computation using at most $O(kn^3 + kn^{\omega}+k^2n\log(n))$ arithmetic operations.
 \end{theorem}
 For Sparse Regression problems, we do not need to evaluate our polynomials at $k$ points to interpolate; it suffices to evaluate at 2 points, so that
 \begin{theorem}
