@@ -72,13 +72,13 @@
 \end{frame}
 \begin{frame}
 \frametitle{Sparse Quadratic Programming}
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}A_0x\\
             \st & x^{\intercal}A_1x = 1\\
                 &|\supp(x)| \le k
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \vspace{0.125in}
 
     $A_0, A_1$ are symmetric, and $x \in \R^n$. 
@@ -89,22 +89,22 @@
 \end{frame}
 \begin{frame}
     \frametitle{Sparse PCA}
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}Ax\\
             \st & x^{\intercal}x = 1\\
                 &|\supp(x)| \le k.
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Sparse Linear Regression}
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
         \min & \|Ax - b\|_2^2\\
         \st & |\supp(x)| \le k.
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Sparse Linear Regression}
@@ -126,70 +126,183 @@
 \begin{frame}
     \centering
     \huge
-    {\color{gray}A Convex Formulation}
+    {\color{gray}A Warm Up}
+\end{frame}
+\begin{frame}
+    \frametitle{A Warm Up}
+    \textbf{Why are these the same? }
+    \vspace{0.6in}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & x^{\intercal}Ax\\
+                    \st & x^{\intercal}x = 1\\
+                \end{aligned}
+            \end{equation*}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \[
+                \max \{t : \det(tI - A) = 0\}.
+            \]
+        \end{column}
+    \end{columns}
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations}
     For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
     optimization problem.
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
-            \max\quad & x^{\intercal}A_0x\\
-            \st & x^{\intercal}A_1x = 1\\
+            \max\quad & x^{\intercal}Ax\\
+            \st & x^{\intercal}x = 1\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \vspace{0.6in}
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations}
     For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
     optimization problem.
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
-            \max\quad & \tr(A_0xx^{\intercal})\\
-            \st & \tr(A_1xx^{\intercal}) = 1\\
+            \max\quad & \tr(Axx^{\intercal})\\
+            \st & \tr(xx^{\intercal}) = 1\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \vspace{0.6in}
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations}
     For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
     optimization problem.
-    \begin{equation}
+    \begin{equation*}
+        \begin{aligned}
+            \max\quad & \tr(AX)\\
+            \st & \tr(X) = 1\\
+            & X = xx^{\intercal}
+        \end{aligned}
+    \end{equation*}
+    \vspace{0.3in}
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
+    optimization problem.
+    \begin{equation*}
         \begin{aligned}
             \max\quad & \tr(A_0X)\\
             \st & \tr(A_1X) = 1\\
                 & X \in S_n\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \pause 
     \[
         S_n = \conv \{ xx^{\intercal} : x \in \R^n\} = \{X : X \succeq 0\}
     \]
 \end{frame}
 \begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    For a convex cone, $X$, we define the dual 
+    \[
+        X^* = \{y : \forall x \in X,\;\langle y, x \rangle \ge 0 \}.
+    \]
+
+
+    For $S_n$,
+    \[
+        S_n^* = S_n.
+    \]
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    Every convex optimization problem of this form has a dual, which has the same value (as long as the problem satisfies a certain technical condition).
+    \hspace{0.3in}
+    \begin{columns}
+        \begin{column}{0.5\textwidth}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & \tr(AX)\\
+                    \st & \tr(X) = 1\\
+                        & X \in S_n\\
+                \end{aligned}
+            \end{equation*}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{equation*}
+                \begin{aligned}
+                    \min\quad & y\\
+                    \st & Iy - A \in S_n^*\\
+                \end{aligned}
+            \end{equation*}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    So, we are left with
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & y\\
+            \st & Iy - A \in S_n^*\\
+        \end{aligned}
+    \end{equation*}
+    How do we solve this?
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    Let $F = \{y \in \R : Iy - A \in S_n^*\}$.
+    \pause
+
+    $F$ is some interval (because it is convex). We want to find the left endpoint of this interval.
+
+    That is, we want to know what is the boundary $\partial F$. 
+\end{frame}
+\begin{frame}
+    \begin{block}{Claim}
+        $\partial F = F \cap \{y \in \R : \det(Iy - A) = 0 \}$.
+    \end{block}
+    \pause
+
+    $\det(X)$ is the product of the eigenvalues of $X$, so if $X \succeq 0$, then $\det(X) \ge 0$.
+    \pause
+
+    If $\det(X) > 0$, and $X$ is PSD, then in fact, all eigenvalues of $X$ are positive, so it is in the interior of $S_n^*$.
+    \pause
+
+    If $\det(X) = 0$, then some eigenvalue of $X$ is 0, so $X - \epsilon I \not \in S_n^*$ for all $\epsilon > 0$, so $X \in \partial S_n^*$.
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations}
+    Finally, note that for all $t$ large enough, $\det(Iy - A) > 0$, so $\partial F = \max \{y : \det(Iy - A) = 0 \}$.
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}A Convex Formulation}
+\end{frame}
+\begin{frame}
 \frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
     For \emph{sparse} QCQPs, we can consider a sparse version of an SDP:
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}A_0x\\
             \st & x^{\intercal}A_1x = 1\\
                 &|\supp(x)| \le k
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \vspace{0.3in}
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
     For \emph{sparse} QCQPs, we can consider a sparse version of an SDP:
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \max\quad & \tr(A_0X)\\
             \st & \tr(A_1X) = 1\\
                 & X \in \FW^k_n\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
     \pause 
     \[
         \FW^k_n = \conv \{xx^{\intercal} : x\in \R^n,\;|\supp(x)| \le k\}.
@@ -198,13 +311,6 @@
 \begin{frame}
     \frametitle{Duality}
     There is a conical dual to $\FW^k_n$:
-    \[
-        S^k_n = \{Y \in \Sym : \forall X \in \FW^k_n,\;\langle X, Y \rangle \ge 0\}.
-    \]
-\end{frame}
-\begin{frame}
-    \frametitle{Duality}
-    We can give the dual cone more explicitly:
     \[
         S^k_n = \{Y \in \Sym : \forall S : |S| = k, \;Y|_S \succeq 0\}.
     \]
@@ -222,58 +328,33 @@
     For most values of $A_1$, the following are equivalent:
     \begin{columns}
         \begin{column}{0.5\textwidth}
-            \begin{equation}
+            \begin{equation*}
                 \begin{aligned}
                     \max\quad & \tr(A_0X)\\
                     \st & \tr(A_1X) = 1\\
                         & X \in \FW^k_n\\
                 \end{aligned}
-            \end{equation}
+            \end{equation*}
         \end{column}
         \begin{column}{0.5\textwidth}
-            \begin{equation}
+            \begin{equation*}
                 \begin{aligned}
                     \min\quad & y\\
                     \st & A_1y - A_0 \in S^k_n\\
                 \end{aligned}
-            \end{equation}
+            \end{equation*}
         \end{column}
     \end{columns}
 \end{frame}
 \begin{frame}
-    \frametitle{Distances}
-    \begin{block}{Question}
-        Let $Y \in S^k_n$. How far away can $Y$ be from being PSD?
-    \end{block}
-    \pause
-    \begin{block}{Question}
-        Let $Y \in S^k_n$, and $\tr(Y)=1$. How small can $\lambda_{min}(Y)$ be?
+    \frametitle{$S^k_n$}
+    \begin{block}{Fact}
+        $X \succeq 0$ if and only if $\det(X|_S) \ge 0$ for all $S \subseteq [n]$.
     \end{block}
 \end{frame}
 \begin{frame}
-    \centering
-    \huge
-    {\color{gray}Eigenvalues in $S^k_n$}
-\end{frame}
-\begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    \begin{equation}
-        \begin{aligned}
-            \min\quad & \lambda_{min}(Y)\\
-            \st & \tr(Y) = 1\\
-                & Y \in S^k_n\\
-        \end{aligned}
-    \end{equation}
-    \pause
-    \begin{itemize}
-        \item Concave minimization (hard).
-        \pause
-        \item Complicated objective.
-    \end{itemize}
-\end{frame}
-\begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    \begin{block}{Observation}
+    \frametitle{$S^k_n$}
+    \begin{block}{Corollary}
         $Y \in S^k_n$ if and only if
 
         \hspace{0.25in} \emph{for any $S \subseteq [n]$ with $|S| \le k$, $\det(Y|_S) \ge 0$.}
@@ -285,7 +366,7 @@
     \]
 \end{frame}
 \begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
+    \frametitle{$S^k_n$}
     \begin{block}{A Note on Characteristic Coefficients}
         $c_n^k(Y)$ is sometimes called a \emph{characteristic coefficient}, since it is a coefficient of the characteristic polynomial of $Y$, i.e.
         \[
@@ -298,73 +379,104 @@
             \pause
             \item Efficiently computable.
             \pause
+            \item For $Y \in S^k_n$, $c_n^k(Y) \ge 0$, and if $c_n^k(Y) = 0$, then $Y$ must be on the boundary of $S^k_n$.
+            \pause
             \item Hyperbolic... (undefined)
         \end{itemize}
     \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    \begin{block}{Observation}
-        If $Y \in S^k_n$, then for $j = 1 ,\dots, k$, $c_n^j(Y) \ge 0$.
-    \end{block}
-\end{frame}
-\begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    Relax the following program
-    \begin{equation}
-        \begin{aligned}
-            \min\quad & \lambda_{min}(Y)\\
-            \st & \tr(Y) = 1\\
-                & Y \in S^k_n\\
-        \end{aligned}
-    \end{equation}
-\end{frame}
-\begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    Relax the following program
-    \begin{equation}
-        \begin{aligned}
-            \min\quad & \lambda_{min}(Y)\\
-            \st & \tr(Y) = 1\\
-                & {\color{red}\text{For }j=1 ,\dots, k,\; c_n^j(Y) \ge 0}\\
-        \end{aligned}
-    \end{equation}
-\end{frame}
-\begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    Consider
+    \frametitle{$S^k_n$}
+    Define
     \[
-        H = \{Y : \text{For }j=1 ,\dots, k,\; c_n^j(Y) \ge 0\}
+        V(c^k_n) = \{ X \in \Sym : c_n^k(X) = 0\}.
     \]
-    \pause This is
+
+    Also define
+    \[
+        H(c^k_n)^o = \text{The connected component of }\Sym\setminus V(c^k_n) \text{ containing }I.
+    \]
+    Finally, let 
+    \[
+        H(c^k_n) = \overline{H(c^k_n)}.
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{$S^k_n$}
+    $H(c^k_n)$.
     \begin{itemize}
-        \item Basis invariant, so that $U^{\intercal} Y U \in H$ if and only if $Y \in H$ for any orthogonal matrix $U$.
+        \item Basis invariant, so that $U^{\intercal} Y U \in H*c^k_n)$ if and only if $Y \in H(c^k_n)$ for any orthogonal matrix $U$.
         \pause
         \item Efficiently computable.
+        \pause
+        \item $S^k_n \subseteq H(c^k_n).$
         \pause
         \item Convex, which follows from the theory of \emph{hyperbolic polynomials}. It is called the \emph{hyperbolicity cone} associated with the polynomial $c_n^k$.
     \end{itemize}
 \end{frame}
 \begin{frame}
-    \frametitle{Eigenvalues in $S^k_n$}
-    \begin{equation}
-        \begin{aligned}
-            \min\quad & \lambda_{min}(Y)\\
-            \st & \tr(Y) = 1\\
-                & Y \in H
-        \end{aligned}
-    \end{equation}
+    \centering
+    \huge
+    {\color{gray}Eigenvalues of Matrices in $S^k_n$.}
+\end{frame}
+\begin{frame}
+    \frametitle{Distances}
+    \begin{block}{Question}
+        Let $Y \in S^k_n$. How far away can $Y$ be from being PSD?
+    \end{block}
+    \pause
+    \begin{block}{Question}
+        Let $Y \in S^k_n$, and $\tr(Y)=1$. How small can $\lambda_{min}(Y)$ be?
+    \end{block}
 \end{frame}
 \begin{frame}
     \frametitle{Eigenvalues in $S^k_n$}
-    \begin{equation}
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & \lambda_{min}(Y)\\
+            \st & \tr(Y) = 1\\
+                & Y \in S^k_n\\
+        \end{aligned}
+    \end{equation*}
+    \pause
+    \begin{itemize}
+        \item Concave minimization (hard).
+        \pause
+        \item Complicated objective.
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Eigenvalues in $S^k_n$}
+    Relax the following program
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & \lambda_{min}(Y)\\
+            \st & \tr(Y) = 1\\
+                & Y \in S^k_n\\
+        \end{aligned}
+    \end{equation*}
+\end{frame}
+\begin{frame}
+    \frametitle{Eigenvalues in $S^k_n$}
+    Relax the following program
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & \lambda_{min}(Y)\\
+            \st & \tr(Y) = 1\\
+                & Y \in {\color{red}H(c_n^k)}\\
+        \end{aligned}
+    \end{equation*}
+\end{frame}
+\begin{frame}
+    \frametitle{Eigenvalues in $S^k_n$}
+    \begin{equation*}
         \begin{aligned}
             \min\quad & {\color{red}Y_{11}}\\
             \st & \tr(Y) = 1\\
                 & {\color{red}Y \text{ is diagonal}}\\
-                & Y \in H
+                & Y \in H(c_n^k)
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Eigenvalues in $S^k_n$}
@@ -432,22 +544,22 @@
 \begin{frame}
     \frametitle{Hyperbolicity Cone Relaxations}
     We can now perform a relaxation
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \min\quad & y\\
             \st & A_1y - A_0 \in S^k_n\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Hyperbolicity Cone Relaxation}
     We can now perform a relaxation
-        \begin{equation}
+        \begin{equation*}
             \begin{aligned}
                 \min\quad & y\\
                 \st & A_1y - A_0 \in {\color{red} H(c_n^k)}\\
             \end{aligned}
-        \end{equation}
+        \end{equation*}
     \pause
 \end{frame}
 \begin{frame}
@@ -459,7 +571,6 @@
         \caption{$S^{n,k}$ and $H$}%
         \label{fig:just_snk}
     \end{figure}
-\end{frame}
 \end{frame}
 \begin{frame}
     \frametitle{Hyperbolicity Cone Relaxation}
@@ -507,12 +618,12 @@
     \frametitle{Hyperbolicity Cone Relaxation}
     So, the optimization problem 
 
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \min\quad & y\\
             \st & A_1y - A_0 \in H(c_n^k)\\
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 
     is intimately related to the question, \emph{what are the roots of the univariate polynomial $g(y) = c_n^k(A_1y-A_0)$?}
 \end{frame}
@@ -520,12 +631,12 @@
     \frametitle{Hyperbolicity Cone Relaxation}
     \begin{block}{Theorem}
         If $A_1$ is PSD, then 
-        \begin{equation}
+        \begin{equation*}
             \begin{aligned}
                 \min\quad & y\\
                 \st & A_1y - A_0 \in H(c_n^k)\\
             \end{aligned}
-        \end{equation}
+        \end{equation*}
         is exactly the maximum root of $c_n^k(A_1y-A_0)$.
     \end{block}
 \end{frame}
@@ -540,13 +651,14 @@
 \end{frame}
 \begin{frame}
     \begin{block}{Theorem}
-        \begin{equation}
+        If $A_1$ is PSD, then
+        \begin{equation*}
             \begin{aligned}
                 \max\quad & x^{\intercal}A_0x\\
                 \st & x^{\intercal}A_1x = 1\\
                     &|\supp(x)| \le k.
             \end{aligned}
-        \end{equation}
+        \end{equation*}
         is at least 
         \[
             \eta = \max \{y : c_n^k(A_1y-A_0) = 0 \}.
@@ -556,13 +668,13 @@
 \begin{frame}
     \frametitle{Example}
     Remember sparse linear regression:
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
         \max & x^{\intercal}A^{\intercal}bb^{\intercal}Ax\\
         \st & x^{\intercal}A^{\intercal}Ax = 1\\
             & |\supp(x)| \le k.
         \end{aligned}
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Example}
@@ -662,25 +774,25 @@
     \begin{block}{Theorem}
         Let $p$ be an LPM polynomial with nonnegative coefficients.
         Consider the structured sparse QCQP:
-        \begin{equation}
+        \begin{equation*}
             \begin{aligned}
                 \max\quad & x^{\intercal}A_0x\\
                 \st & x^{\intercal}A_1x = 1\\
                     & \supp(x) \in \supp(p)
             \end{aligned},
-        \end{equation}
+        \end{equation*}
         then there is some feasible $x$ acheiving an objective of at least $\eta_p$.
     \end{block}
 \end{frame}
 \begin{frame}
     Also, if $p = \det(X|_S)$, for some $S$, then $\eta_p$ is exactly
-    \begin{equation}
+    \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}A_0x\\
             \st & x^{\intercal}A_1x = 1\\
                 & \supp(x) = S
         \end{aligned}.
-    \end{equation}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     An idea: start with $p_0 = c_n^k$, and then construct polynomials $p_1,p_2 ,\dots, $ so that $\supp(p_{i+1}) \subsetneq \supp(p_{i})$.
@@ -695,9 +807,9 @@
 \end{frame}
 \begin{frame}
     \frametitle{Conditioning}
-    For a LPM polynomial $p$, and a set $T \subseteq [n]$, define
+    For a LPM polynomial $p$, and $i \in [n]$, define
     \[
-        p|_T = \sum_{S : T \subseteq S} a_S \det(X|_S).
+        p|_i = \sum_{S : i \in S} a_S \det(X|_S).
     \]
     This has support strictly smaller than $p$. Is it better than $p$?
 \end{frame}
@@ -749,13 +861,13 @@
     \frametitle{An Algorithm for Sparse QCQPs}
     
 This always returns some $T$ so that 
-\begin{equation}
+\begin{equation*}
     \begin{aligned}
         \max\quad & x^{\intercal}A_0x\\
         \st & x^{\intercal}A_1x = 1\\
             & \supp(x) = T
     \end{aligned}
-\end{equation}
+\end{equation*}
 is at least $\eta_p$.
 \end{frame}
 \begin{frame}
@@ -774,6 +886,12 @@ is at least $\eta_p$.
     For sparse regression, this gives a $O(n^3+kn^{\omega})$ time algorithm for performing the greedy update.
 \end{frame}
 \begin{frame}
+    \centering
+    \huge
+    {\color{gray}Experimental Results}
+\end{frame}
+
+\begin{frame}
     \begin{figure}[h]
         \centering
         \includegraphics[width=0.8\linewidth]{superconductivity.png}
@@ -788,6 +906,14 @@ is at least $\eta_p$.
         \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
         \label{fig:name}
     \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{Open Problems}
+    \begin{itemize}
+        \item Does this really work? Can we prove it?
+        \item Can we do more interesting combinatorial constraints on the support?
+        \item Can we use these roots in a more clever (or less greedy way)?
+    \end{itemize}
 \end{frame}
 %\begin{frame}
 %    \frametitle{Positive Semidefinite Matrices}
@@ -902,13 +1028,13 @@ is at least $\eta_p$.
 %\end{frame}
 %\begin{frame}
 %    \frametitle{Semidefinite Programming}
-%    \begin{equation*}
+%    \begin{equation**}
 %    \begin{aligned}
 %        \text{minimize} &&\langle B^0, X\rangle\\
 %        \text{such that } &&\langle B^{\ell}, X\rangle = b_{\ell} &&\text{ for }\ell \in \{1,\dots, k\}\\
 %                          &&  X \succeq 0
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %    \begin{itemize}
 %        \item $X \succeq 0$ means that $X$ is an $n\times n $ positive semidefinite matrix.
 %        \item A matrix is positive semidefinite if it is symmetric and all of its eigenvalues are nonnegative.
@@ -920,14 +1046,14 @@ is at least $\eta_p$.
 %    
 %    \begin{block}{Goemans-Williamson SDP}
 %    For a graph $G$, with adjacency matrix $A$,
-%    \begin{equation*}
+%    \begin{equation**}
 %        \SDP_{GW} = 
 %    \begin{aligned}
 %        \text{minimize} &&\langle A, X\rangle\\
 %        \text{such that } &&X_{ii} = 1 &\text{ for each }i\in [n]\\
 %                          &&  X \succeq 0
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %    \end{block}
 %    \begin{itemize}
 %        \item Let $\alpha = \frac{1}{2}(|E(G)| - \SDP_{GW}).$
@@ -954,7 +1080,7 @@ is at least $\eta_p$.
 %        \caption{The 4-cycle, and an optimal bipartition of the vertices.}
 %    \end{subfigure}%
 %    \begin{subfigure}{0.65\textwidth}
-%        \begin{equation*}
+%        \begin{equation**}
 %        \begin{aligned}
 %            \text{minimize} && X_{12}+X_{23}+X_{34}+X_{14}\\
 %            \text{such that } &&\begin{pmatrix}
@@ -965,7 +1091,7 @@ is at least $\eta_p$.
 %                              \end{pmatrix}
 %                                  \succeq 0
 %        \end{aligned}
-%        \end{equation*}
+%        \end{equation**}
 %    \end{subfigure}
 %    \caption{Goemans Williamson SDP for the 4-cycle. This does turn out to give the correct MAX-CUT value of $4$.}
 %    \end{figure}
@@ -974,7 +1100,7 @@ is at least $\eta_p$.
 %     \frametitle{Interesting Semidefinite Programs}
 %     \begin{block}{Lovasz Theta Number}
 %     For a graph $G$, 
-%     \begin{equation*}
+%     \begin{equation**}
 %         \SDP_{\theta} = 
 %     \begin{aligned}
 %         \text{minimize} &&\langle \vec{1}, X\rangle\\
@@ -982,7 +1108,7 @@ is at least $\eta_p$.
 %                           && \tr(X) = 1\\
 %                           &&  X \succeq 0
 %     \end{aligned}
-%     \end{equation*}
+%     \end{equation**}
 %     \end{block}
 %     \begin{itemize}
 %         \item If $\omega(G)$ is the clique number of $G$, and $\chi(G)$ is the chromatic number. $\bar{G}$ is the complement graph to $G$.
@@ -1038,13 +1164,13 @@ is at least $\eta_p$.
 %        \caption{The 4-cycle.}
 %    \end{subfigure}%
 %    \begin{subfigure}{0.65\textwidth}
-%        \begin{equation*}
+%        \begin{equation**}
 %        \begin{aligned}
 %            \text{minimize} && X_{12}+X_{23}+X_{34}+X_{14}\\
 %            \text{such that } &&X_{11}=X_{22}=X_{33}=X_{44}=1\\
 %                              &&X \succeq 0
 %        \end{aligned}
-%        \end{equation*}
+%        \end{equation**}
 %    \end{subfigure}
 %    \caption{Goemans Williamson SDP for the 4-cycle}
 %    \end{figure}
@@ -1109,17 +1235,17 @@ is at least $\eta_p$.
 %
 %    For example
 %    {\small
-%    \begin{equation*}
+%    \begin{equation**}
 %    \begin{aligned}
 %        \text{minimize} && X_{12}+X_{23}+X_{34}+X_{14}\\
 %        \text{such that } &&X_{11}=X_{22}=X_{33}=X_{44}=1\\
 %                          &&X \succeq 0
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %    }
 %    can be rewritten
 %    {\small
-%    \begin{equation*}
+%    \begin{equation**}
 %    \begin{aligned}
 %        \text{minimize} && X_{12}+X_{23}+X_{34}+X_{14}\\
 %        \text{such that } &&X_{11}=X_{22}=X_{33}=X_{44}=1\\
@@ -1131,7 +1257,7 @@ is at least $\eta_p$.
 %                              X_{14} & ? & X_{34} & X_{44}\\
 %                          \end{pmatrix} \in \Sigma(G)
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %    }
 %\end{frame}
 %\begin{frame}
@@ -1190,23 +1316,23 @@ is at least $\eta_p$.
 %\begin{frame}
 %    \frametitle{A Natural Relaxation}
 %    If we have a $G$-sparse SDP, 
-%    \begin{equation*}
+%    \begin{equation**}
 %        \SDP =
 %    \begin{aligned}
 %        \text{minimize} &&\langle B^0, X\rangle\\
 %        \text{such that } &&\langle B^{\ell}, X\rangle = b_{\ell} &&\text{ for }\ell \in \{1,\dots, k\}\\
 %                          &&  X \in \Sigma(G),
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %    We will denote a modification 
-%    \begin{equation*}
+%    \begin{equation**}
 %        \SDP^{SG} = 
 %    \begin{aligned}
 %        \text{minimize} &&\langle B^0, X\rangle\\
 %        \text{such that } &&\langle B^{\ell}, X\rangle = b_{\ell} &&\text{ for }\ell \in \{1,\dots, k\}\\
 %                          &&  X \in \mathcal{P}(G)
 %    \end{aligned}
-%    \end{equation*}
+%    \end{equation**}
 %\end{frame}
 %\begin{frame}
 %    \frametitle{A Natural Relaxation}
