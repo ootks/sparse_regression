@@ -12,7 +12,6 @@
 \usepackage{xspace}
 \newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
 
-\DeclareMathOperator{\Sym}{Sym}
 \usepackage{amsthm, amsmath, amsfonts, amssymb}
 \usepackage{relsize}
 \usepackage{graphicx}
@@ -51,6 +50,7 @@
 \DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\rank}{rank}
 \newcommand{\st}{{\text{ s.t. }}}
+\newcommand{\Sym}{\R^{n\times n}_{sym}}
 \renewcommand\top[2]{\genfrac{}{}{0pt}{}{#1}{#2}}
 \newcommand\twoline[2]{\genfrac{}{}{0pt}{}{#1}{#2}}
 
@@ -72,6 +72,7 @@
 \end{frame}
 \begin{frame}
 \frametitle{Sparse Quadratic Programming}
+\begin{block}{Sparse QCQP}
     \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}A_0x\\
@@ -79,7 +80,7 @@
                 &|\supp(x)| \le k
         \end{aligned}
     \end{equation*}
-    \vspace{0.125in}
+\end{block}
 
     $A_0, A_1$ are symmetric, and $x \in \R^n$. 
     \[
@@ -88,33 +89,38 @@
 
 \end{frame}
 \begin{frame}
-    \frametitle{Sparse PCA}
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & x^{\intercal}Ax\\
-            \st & x^{\intercal}x = 1\\
-                &|\supp(x)| \le k.
-        \end{aligned}
-    \end{equation*}
+    \frametitle{Example}
+    \begin{block}{Sparse Maximum Eigenvalue}
+        \begin{equation*}
+            \begin{aligned}
+                \max\quad & x^{\intercal}Ax\\
+                \st & x^{\intercal}x = 1\\
+                    &|\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+        
+    \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Sparse Linear Regression}
-    \begin{equation*}
-        \begin{aligned}
-        \min & \|Ax - b\|_2^2\\
-        \st & |\supp(x)| \le k.
-        \end{aligned}
-    \end{equation*}
+    \frametitle{Another Example}
+    \begin{block}{Sparse Linear Regression}
+        \begin{equation*}
+            \begin{aligned}
+            \min & \|Ax - b\|_2^2\\
+            \st & |\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+    \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Sparse Linear Regression}
+    \frametitle{Another Example}
     \begin{figure}[h]
         \centering
         \includegraphics[width=\linewidth]{slide3.jpg}
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Sparse Linear Regression}
+    \frametitle{Another Example}
     Sparse regression is a sparse QCQP where
     \[
         A_0 = A^{\intercal}bb^{\intercal}A
@@ -123,167 +129,200 @@
         A_1 = A^{\intercal}A
     \]
 \end{frame}
+%\begin{frame}
+%    \centering
+%    \huge
+%    {\color{gray}A Warm Up}
+%\end{frame}
+%\begin{frame}
+%    \frametitle{A Warm Up}
+%    \textbf{Why are these the same? Both give $\lambda_{max}(A)$.}
+%    \vspace{0.3in}
+%    \begin{columns}
+%        \begin{column}{0.48\textwidth}
+%            \begin{block}{Variational Characterization}
+%            \begin{equation*}
+%                \begin{aligned}
+%                    \max\quad & x^{\intercal}Ax\\
+%                    \st & x^{\intercal}x = 1\\
+%                \end{aligned}
+%            \end{equation*}
+%            \end{block}
+%        \end{column}
+%        \begin{column}{0.48\textwidth}
+%            \begin{block}{Characteristic Polynomial}
+%            \[
+%                \max \{t : \det(tI - A) = 0\}.
+%            \]
+%            \end{block}
+%        \end{column}
+%    \end{columns}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
+%    optimization problem.
+%    \begin{equation*}
+%        \begin{aligned}
+%            \max\quad & x^{\intercal}Ax\\
+%            \st & x^{\intercal}x = 1\\
+%        \end{aligned}
+%    \end{equation*}
+%    \vspace{0.6in}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
+%    optimization problem.
+%    \begin{equation*}
+%        \begin{aligned}
+%            \max\quad & \tr(Axx^{\intercal})\\
+%            \st & \tr(xx^{\intercal}) = 1\\
+%        \end{aligned}
+%    \end{equation*}
+%    \vspace{0.6in}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
+%    optimization problem.
+%    \begin{equation*}
+%        \begin{aligned}
+%            \max\quad & \tr(AX)\\
+%            \st & \tr(X) = 1\\
+%            & X = xx^{\intercal}
+%        \end{aligned}
+%    \end{equation*}
+%    \vspace{0.3in}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
+%    optimization problem.
+%    \begin{equation*}
+%        \begin{aligned}
+%            \max\quad & \tr(AX)\\
+%            \st & \tr(X) = 1\\
+%                & X \in S_n\\
+%        \end{aligned}
+%    \end{equation*}
+%    \pause 
+%    \[
+%        S_n = \conv \{ xx^{\intercal} : x \in \R^n\} = \{X : X \succeq 0\}
+%    \]
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    For a convex cone, $C$, we define the dual 
+%    \[
+%        C^* = \{y : \forall x \in C,\;\langle y, x \rangle \ge 0 \}.
+%    \]
+%
+%
+%    For $S_n$,
+%    \[
+%        S_n^* = S_n.
+%    \]
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    Every convex optimization problem of this form has a dual, which has the same value (as long as the problem satisfies a certain technical condition).
+%    \hspace{0.3in}
+%    \begin{columns}
+%        \begin{column}{0.5\textwidth}
+%            \begin{equation*}
+%                \begin{aligned}
+%                    \max\quad & \tr(AX)\\
+%                    \st & \tr(X) = 1\\
+%                        & X \in S_n\\
+%                \end{aligned}
+%            \end{equation*}
+%        \end{column}
+%        \begin{column}{0.5\textwidth}
+%            \begin{equation*}
+%                \begin{aligned}
+%                    \min\quad & y\\
+%                    \st & Iy - A \in S_n^*\\
+%                \end{aligned}
+%            \end{equation*}
+%        \end{column}
+%    \end{columns}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    So, we are left with
+%    \begin{equation*}
+%        \begin{aligned}
+%            \min\quad & y\\
+%            \st & Iy - A \in S_n^*\\
+%        \end{aligned}
+%    \end{equation*}
+%    How do we solve this?
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    \begin{document}
+%    \tikzset{
+%  mynode/.style={fill,circle,inner sep=2pt,outer sep=0pt}
+%}
+%    \begin{figure}
+%        \centering
+%          \begin{tikzpicture}
+%            \draw[black,thick] (0,0) -- (7,0);
+%            \draw[green,thick] (3,0) -- (5,0)
+%                node[pos=0,mynode,fill=red,label=above:\textcolor{red}{$y^*$}]{}
+%                node[pos=1,mynode,fill=blue,text=blue,label=above:\textcolor{blue}{}]{};
+%          \end{tikzpicture}
+%    \end{figure}
+%    \end{document}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%    \begin{block}{Fact}
+%        $X \in S_n$ if and only if $\det(X|_S) \ge 0$ for all $S \subseteq [n]$. $X \in \partial  S_n$ if and only if $\det(X) = 0$.
+%    \end{block}
+%\end{frame}
+%\begin{frame}
+%\frametitle{Semidefinite Programming Relaxations}
+%For $y^*$ to be optimal, it must lie on the boundary of $\{y : Iy - A \succeq 0\}$, so $\det(Iy^*-A) = 0$.
+%
+%Finally, all $t$ large enough, $Iy - A \in S_n$, so the solution to this optimization problem is
+%\[
+%    \max \{y : \det(Iy - A) = 0\}.
+%\]
+%
+%\end{frame}
+%\begin{frame}
+%    \frametitle{Summary}
+%    \vspace{0.3in}
+%    \begin{columns}
+%        \begin{column}{0.48\textwidth}
+%            \begin{block}{Variational Characterization}
+%            \begin{equation*}
+%                \begin{aligned}
+%                    \max\quad & x^{\intercal}Ax\\
+%                    \st & x^{\intercal}x = 1\\
+%                \end{aligned}
+%            \end{equation*}
+%            \end{block}
+%        \end{column}
+%        \begin{column}{0.48\textwidth}
+%            \begin{block}{Characteristic Polynomial}
+%            \[
+%                \max \{t : \det(tI - A) = 0\}.
+%            \]
+%            \end{block}
+%        \end{column}
+%    \end{columns}
+%    \textbf{These are equal because $\det(\cdot)$ is a barrier function for the dual cone.}
+%\end{frame}
 \begin{frame}
     \centering
     \huge
-    {\color{gray}A Warm Up}
-\end{frame}
-\begin{frame}
-    \frametitle{A Warm Up}
-    \textbf{Why are these the same? }
-    \vspace{0.6in}
-    \begin{columns}
-        \begin{column}{0.48\textwidth}
-            \begin{equation*}
-                \begin{aligned}
-                    \max\quad & x^{\intercal}Ax\\
-                    \st & x^{\intercal}x = 1\\
-                \end{aligned}
-            \end{equation*}
-        \end{column}
-        \begin{column}{0.48\textwidth}
-            \[
-                \max \{t : \det(tI - A) = 0\}.
-            \]
-        \end{column}
-    \end{columns}
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
-    optimization problem.
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & x^{\intercal}Ax\\
-            \st & x^{\intercal}x = 1\\
-        \end{aligned}
-    \end{equation*}
-    \vspace{0.6in}
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
-    optimization problem.
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & \tr(Axx^{\intercal})\\
-            \st & \tr(xx^{\intercal}) = 1\\
-        \end{aligned}
-    \end{equation*}
-    \vspace{0.6in}
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
-    optimization problem.
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & \tr(AX)\\
-            \st & \tr(X) = 1\\
-            & X = xx^{\intercal}
-        \end{aligned}
-    \end{equation*}
-    \vspace{0.3in}
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    For non-sparse QCQPs, there is a standard Schur relaxation, which is a convex
-    optimization problem.
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & \tr(A_0X)\\
-            \st & \tr(A_1X) = 1\\
-                & X \in S_n\\
-        \end{aligned}
-    \end{equation*}
-    \pause 
-    \[
-        S_n = \conv \{ xx^{\intercal} : x \in \R^n\} = \{X : X \succeq 0\}
-    \]
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    For a convex cone, $X$, we define the dual 
-    \[
-        X^* = \{y : \forall x \in X,\;\langle y, x \rangle \ge 0 \}.
-    \]
-
-
-    For $S_n$,
-    \[
-        S_n^* = S_n.
-    \]
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    Every convex optimization problem of this form has a dual, which has the same value (as long as the problem satisfies a certain technical condition).
-    \hspace{0.3in}
-    \begin{columns}
-        \begin{column}{0.5\textwidth}
-            \begin{equation*}
-                \begin{aligned}
-                    \max\quad & \tr(AX)\\
-                    \st & \tr(X) = 1\\
-                        & X \in S_n\\
-                \end{aligned}
-            \end{equation*}
-        \end{column}
-        \begin{column}{0.5\textwidth}
-            \begin{equation*}
-                \begin{aligned}
-                    \min\quad & y\\
-                    \st & Iy - A \in S_n^*\\
-                \end{aligned}
-            \end{equation*}
-        \end{column}
-    \end{columns}
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    So, we are left with
-    \begin{equation*}
-        \begin{aligned}
-            \min\quad & y\\
-            \st & Iy - A \in S_n^*\\
-        \end{aligned}
-    \end{equation*}
-    How do we solve this?
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    Let $F = \{y \in \R : Iy - A \in S_n^*\}$.
-    \pause
-
-    $F$ is some interval (because it is convex). We want to find the left endpoint of this interval.
-
-    That is, we want to know what is the boundary $\partial F$. 
-\end{frame}
-\begin{frame}
-    \begin{block}{Claim}
-        $\partial F = F \cap \{y \in \R : \det(Iy - A) = 0 \}$.
-    \end{block}
-    \pause
-
-    $\det(X)$ is the product of the eigenvalues of $X$, so if $X \succeq 0$, then $\det(X) \ge 0$.
-    \pause
-
-    If $\det(X) > 0$, and $X$ is PSD, then in fact, all eigenvalues of $X$ are positive, so it is in the interior of $S_n^*$.
-    \pause
-
-    If $\det(X) = 0$, then some eigenvalue of $X$ is 0, so $X - \epsilon I \not \in S_n^*$ for all $\epsilon > 0$, so $X \in \partial S_n^*$.
-\end{frame}
-\begin{frame}
-\frametitle{Semidefinite Programming Relaxations}
-    Finally, note that for all $t$ large enough, $\det(Iy - A) > 0$, so $\partial F = \max \{y : \det(Iy - A) = 0 \}$.
-\end{frame}
-\begin{frame}
-    \centering
-    \huge
-    {\color{gray}A Convex Formulation}
+    {\color{gray}A Convex Formulation for Sparse QCQPs}
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
-    For \emph{sparse} QCQPs, we can consider a sparse version of an SDP:
     \begin{equation*}
         \begin{aligned}
             \max\quad & x^{\intercal}A_0x\\
@@ -291,7 +330,35 @@
                 &|\supp(x)| \le k
         \end{aligned}
     \end{equation*}
-    \vspace{0.3in}
+
+    We can reformulate sparse QCQPs into a convex optimization problem, in a way that is analogous to the standard SDP relaxation of a QCQP.
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
+    \begin{equation*}
+        \begin{aligned}
+            \max\quad & \tr(A_0X)\\
+            \st & \tr(A_1X) = 1\\
+                & X = xx^{\intercal}\\
+                &|\supp(x)| \le k
+        \end{aligned}
+    \end{equation*}
+
+    Linearize this problem by introducing a new symmetric matrix variable $X$, representing $xx^{\intercal}$.
+\end{frame}
+\begin{frame}
+\frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
+
+    \begin{equation*}
+        \begin{aligned}
+            \max\quad & \tr(A_0X)\\
+            \st & \tr(A_1X) = 1\\
+                & {\color{red}X = xx^{\intercal}}\\
+                & {\color{red} |\supp(x)| \le k}
+        \end{aligned}
+    \end{equation*}
+
+    Linearize this problem by introducing a new symmetric matrix variable $X$, representing $xx^{\intercal}$.
 \end{frame}
 \begin{frame}
 \frametitle{Semidefinite Programming Relaxations for Sparse QCQPs}
@@ -300,12 +367,12 @@
         \begin{aligned}
             \max\quad & \tr(A_0X)\\
             \st & \tr(A_1X) = 1\\
-                & X \in \FW^k_n\\
+                & {\color{red}X \in \FW^k_n}\\
         \end{aligned}
     \end{equation*}
     \pause 
     \[
-        \FW^k_n = \conv \{xx^{\intercal} : x\in \R^n,\;|\supp(x)| \le k\}.
+        \FW^k_n = \conv \{xx^{\intercal} : x\in \R^n,\;|\supp(x)| \le k\} \subseteq \Sym. 
     \]
 \end{frame}
 \begin{frame}
@@ -314,14 +381,6 @@
     \[
         S^k_n = \{Y \in \Sym : \forall S : |S| = k, \;Y|_S \succeq 0\}.
     \]
-\end{frame}
-\begin{frame}
-    \frametitle{Duality}
-    In words, $S^k_n$ are those symmetric matrices where all of their $k\times k$ minors are PSD.
-    \begin{itemize}
-        \item ``Local'' version of the PSD cone.
-        \item $S^k_n$ is hard to optimize over.
-    \end{itemize}
 \end{frame}
 \begin{frame}
     \frametitle{Duality}
@@ -347,6 +406,14 @@
     \end{columns}
 \end{frame}
 \begin{frame}
+    \frametitle{Duality}
+    In words, $S^k_n$ are those symmetric matrices where all of their $k\times k$ minors are PSD.
+    \begin{itemize}
+        \item ``Local'' version of the PSD cone.
+        \item Captures the difficulty of sparse QCQPs.
+    \end{itemize}
+\end{frame}
+\begin{frame}
     \frametitle{$S^k_n$}
     \begin{block}{Fact}
         $X \succeq 0$ if and only if $\det(X|_S) \ge 0$ for all $S \subseteq [n]$.
@@ -359,18 +426,24 @@
 
         \hspace{0.25in} \emph{for any $S \subseteq [n]$ with $|S| \le k$, $\det(Y|_S) \ge 0$.}
     \end{block}
-    \pause 
-    Define 
+
+    A matrix is in $S^k_n$ if and only if all \emph{sufficiently small} submatrices have nonnegative determinant.
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    Define
     \[
         c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
     \]
+    \pause 
+    Our fact implies that $c_n^k$ is nonnegative on all of $S^k_n$.
 \end{frame}
 \begin{frame}
-    \frametitle{$S^k_n$}
+    \frametitle{Characteristic Coefficients}
     \begin{block}{A Note on Characteristic Coefficients}
         $c_n^k(Y)$ is sometimes called a \emph{characteristic coefficient}, since it is a coefficient of the characteristic polynomial of $Y$, i.e.
         \[
-            \det(Y + tI) = \sum_{j=0}^n c_n^j(Y) t^j.
+            \det(Y + tI) = \sum_{j=0}^n c_n^{n-j}(Y) t^j.
         \]
         \pause
         In particular, it is
@@ -379,39 +452,84 @@
             \pause
             \item Efficiently computable.
             \pause
-            \item For $Y \in S^k_n$, $c_n^k(Y) \ge 0$, and if $c_n^k(Y) = 0$, then $Y$ must be on the boundary of $S^k_n$.
+            \item For $Y$ in the interior of $S^k_n$, $c_n^k(Y) > 0$.
             \pause
             \item Hyperbolic... (undefined)
         \end{itemize}
     \end{block}
 \end{frame}
 \begin{frame}
+    \frametitle{Characteristic Coefficients}
+    \begin{block}{Defining the Hyperbolicity Cone}
+        Define the \emph{zero-free region of $\Sym$} to be 
+        \[
+            F(c^k_n) = \{ X \in \Sym : c_n^k(X) \neq 0\}.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    \begin{block}{Defining the Hyperbolicity Cone}
+        Define the \emph{hyperbolicity cone} to be 
+        \[
+            H(c^k_n) = \text{The connected component of }F(c^k_n) \text{ containing }I.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
     \frametitle{$S^k_n$}
-    Define
-    \[
-        V(c^k_n) = \{ X \in \Sym : c_n^k(X) = 0\}.
-    \]
-
-    Also define
-    \[
-        H(c^k_n)^o = \text{The connected component of }\Sym\setminus V(c^k_n) \text{ containing }I.
-    \]
-    Finally, let 
-    \[
-        H(c^k_n) = \overline{H(c^k_n)}.
-    \]
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{variety.png}
+        \caption{A cartoon of $F(c^k_n)$}%
+        \label{fig:variety}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{$S^k_n$}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{hcone.png}
+        \caption{A cartoon of $H(c^k_n)$}%
+        \label{fig:variety}
+    \end{figure}
 \end{frame}
 \begin{frame}
     \frametitle{$S^k_n$}
     $H(c^k_n)$.
     \begin{itemize}
-        \item Basis invariant, so that $U^{\intercal} Y U \in H*c^k_n)$ if and only if $Y \in H(c^k_n)$ for any orthogonal matrix $U$.
+        \item Basis invariant, so that $U^{\intercal} Y U \in H(c^k_n)$ if and only if $Y \in H(c^k_n)$ for any orthogonal matrix $U$.
         \pause
         \item Efficiently computable.
         \pause
         \item $S^k_n \subseteq H(c^k_n).$
         \pause
         \item Convex, which follows from the theory of \emph{hyperbolic polynomials}. It is called the \emph{hyperbolicity cone} associated with the polynomial $c_n^k$.
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{A Picture of the Relaxation}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{just_snk.png}
+        \caption{$S^{k}_n$}%
+        \label{fig:just_snk}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{A Picture of the Relaxation}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{comparison.png}
+        \caption{$S^{k}_n$ and $H(c^k_n)$}%
+        \label{fig:just_snk}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{Applications}
+    \begin{itemize}
+        \item Eigenvalues of Matrices in $S^k_n$.
+        \item An algorithm for Sparse QCQPs.
     \end{itemize}
 \end{frame}
 \begin{frame}
@@ -425,7 +543,7 @@
         Let $Y \in S^k_n$. How far away can $Y$ be from being PSD?
     \end{block}
     \pause
-    \begin{block}{Question}
+    \begin{block}{Formal Question}
         Let $Y \in S^k_n$, and $\tr(Y)=1$. How small can $\lambda_{min}(Y)$ be?
     \end{block}
 \end{frame}
@@ -440,6 +558,8 @@
     \end{equation*}
     \pause
     \begin{itemize}
+        \item A basic linear algebra question?
+        \pause
         \item Concave minimization (hard).
         \pause
         \item Complicated objective.
@@ -469,9 +589,10 @@
 \end{frame}
 \begin{frame}
     \frametitle{Eigenvalues in $S^k_n$}
+    Apply basis invariance
     \begin{equation*}
         \begin{aligned}
-            \min\quad & {\color{red}Y_{11}}\\
+            \min\quad & \lambda_{min}(Y)\\
             \st & \tr(Y) = 1\\
                 & {\color{red}Y \text{ is diagonal}}\\
                 & Y \in H(c_n^k)
@@ -480,19 +601,38 @@
 \end{frame}
 \begin{frame}
     \frametitle{Eigenvalues in $S^k_n$}
-    It turns out that this is a convex optimization problem, and it is symmetric up to permutations of the last $n-1$ coordinates, so we can actually solve this exactly.
-    
-    An optimum is given by a diagonal matrix $Y$ so that 
-    \[
-        Y_{11} = \frac{k-n}{n(k-1)}
-    \]
-    \[
-        Y_{22} = Y_{33}  =\dots= Y_{nn} = \frac{(n+1)k}{n^2(k-1)}
-    \]
+    Apply permutation invariance.
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & {\color{red}Y_{11}}\\
+            \st & \tr(Y) = 1\\
+                & Y \text{ is diagonal}\\
+                & Y \in H(c_n^k)
+        \end{aligned}
+    \end{equation*}
 \end{frame}
 \begin{frame}
     \frametitle{Eigenvalues in $S^k_n$}
-    This is also the diagonalization of a matrix
+    \begin{equation*}
+        \begin{aligned}
+            \min\quad & Y_{11}\\
+            \st & \tr(Y) = 1\\
+                & Y \text{ is diagonal}\\
+                & Y \in H(c_n^k)
+        \end{aligned}
+    \end{equation*}
+    \pause
+    These last 3 constraints are permutation invariant, so by convexity, this reduces to a 1-dimensional optimization problem!
+
+    The minimum turns out to be 
+    \[
+        \frac{k-n}{n(k-1)}.
+    \]
+
+\end{frame}
+\begin{frame}
+    \frametitle{Eigenvalues in $S^k_n$}
+    This is also the minimum eigenvalue of the matrix
     \[
         G(n,k) = 
         \frac{1}{n}
@@ -515,21 +655,10 @@
     \end{itemize}
 \end{frame}
 \begin{frame}
-    \frametitle{Stepping Back}
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.6\linewidth]{just_snk.png}
-        \caption{$S^{n,k}$}%
-        \label{fig:just_snk}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \frametitle{Stepping Back}
+    \frametitle{$S^k_n$}
     \begin{figure}[h]
         \centering
         \includegraphics[width=0.6\linewidth]{comparison.png}
-        \caption{$S^{n,k}$ and $H$}%
-        \label{fig:just_snk}
     \end{figure}
 \end{frame}
 \begin{frame}
@@ -542,7 +671,12 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxations}
+    \centering
+    \huge
+    {\color{gray}A Heuristic for Sparse QCQPs}
+\end{frame}
+\begin{frame}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     We can now perform a relaxation
     \begin{equation*}
         \begin{aligned}
@@ -552,7 +686,7 @@
     \end{equation*}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     We can now perform a relaxation
         \begin{equation*}
             \begin{aligned}
@@ -563,7 +697,7 @@
     \pause
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \frametitle{Stepping Back}
     \begin{figure}[h]
         \centering
@@ -573,7 +707,7 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{figure}[htpb]
         \centering
         \includegraphics[width=0.6\linewidth]{comparison_line.png}
@@ -582,7 +716,7 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{figure}[htpb]
         \centering
         \includegraphics[width=0.6\linewidth]{comparison_line_rotated.png}
@@ -591,7 +725,7 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{figure}[htpb]
         \centering
         \includegraphics[width=0.6\linewidth]{optimum.png}
@@ -600,7 +734,7 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{figure}[htpb]
         \centering
         \includegraphics[width=0.6\linewidth]{relaxed.png}
@@ -609,13 +743,13 @@
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{block}{Key Fact}
         \[\partial H(c_n^k) = \{X \in H(c_n^k) : c_n^k(X) = 0\}.\]
     \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     So, the optimization problem 
 
     \begin{equation*}
@@ -628,7 +762,7 @@
     is intimately related to the question, \emph{what are the roots of the univariate polynomial $g(y) = c_n^k(A_1y-A_0)$?}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{block}{Theorem}
         If $A_1$ is PSD, then 
         \begin{equation*}
@@ -641,7 +775,7 @@
     \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Hyperbolicity Cone Relaxation}
+    \frametitle{Hyperbolicity Cones and Sparse QCQPs}
     \begin{figure}[htpb]
         \centering
         \includegraphics[width=0.8\linewidth]{roots.png}
@@ -670,7 +804,7 @@
     Remember sparse linear regression:
     \begin{equation*}
         \begin{aligned}
-        \max & x^{\intercal}A^{\intercal}bb^{\intercal}Ax\\
+        \max\quad & x^{\intercal}A^{\intercal}bb^{\intercal}Ax\\
         \st & x^{\intercal}A^{\intercal}Ax = 1\\
             & |\supp(x)| \le k.
         \end{aligned}
@@ -686,20 +820,11 @@
 \end{frame}
 \begin{frame}
     \frametitle{Example}
-    \[
-        \hat{b}\hat{b}^{\intercal}
-    \]
-    is rank 1! That means $y = 0$ is a root of multiplicity $k-1$ of this polynomial, so actually
-    \[
-        c_n^k(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = y^{k-1}(c_1y+c_2),
-    \]
-    for some $c_1,c_2 \in \R$.
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    \[
-        \eta = \frac{c_n^k(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{c_n^k(A^{\intercal}A)} - 1.
-    \]
+    \begin{block}{An explicit formula for linear regression}
+        \[
+            \eta = \frac{c_n^k(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{c_n^k(A^{\intercal}A)} - 1.
+        \]
+    \end{block}
 \end{frame}
 \begin{frame}
     \frametitle{Example}
@@ -711,7 +836,7 @@
     This turns out to be exactly the formula for the optimal error in ordinary least squares regression, and can be seen as a version of Cramer's rule for solving a system of linear equations.
 \end{frame}
 \begin{frame}
-    \frametitle{Example}
+    \frametitle{What now?}
     Two questions:
     \begin{itemize}
         \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
@@ -720,7 +845,7 @@
     \end{itemize}
 \end{frame}
 \begin{frame}
-    \frametitle{Example}
+    \frametitle{What now?}
     Two questions:
     \begin{itemize}
         \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
@@ -741,18 +866,21 @@
     {\color{gray}Introducing Coefficients}
 \end{frame}
 \begin{frame}
+    \frametitle{Introducing Coefficients}
     Recall
     \[
         c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
     \]
 \end{frame}
 \begin{frame}
+    \frametitle{Introducing Coefficients}
     A polynomial is said to be a linear principal minors polynomial (LPM) if there are $a_S$ so that
     \[
         p(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}} a_S \det(Y|_S).
     \]
 \end{frame}
 \begin{frame}
+    \frametitle{Introducing Coefficients}
     For any LPM polynomial $p$ with nonnegative coefficients, and any $Y \in S^k_n$, 
     \[
         p(Y) \ge 0.
@@ -765,6 +893,7 @@
     is a lower bound on the value of the dual problem.
 \end{frame}
 \begin{frame}
+    \frametitle{Introducing Coefficients}
     We can be a little more refined: let $p$ be LPM, and let 
     \[
         \supp(p) = \{S : a_S \neq 0\}.
@@ -785,6 +914,7 @@
     \end{block}
 \end{frame}
 \begin{frame}
+    \frametitle{Introducing Coefficients}
     Also, if $p = \det(X|_S)$, for some $S$, then $\eta_p$ is exactly
     \begin{equation*}
         \begin{aligned}
@@ -795,6 +925,7 @@
     \end{equation*}
 \end{frame}
 \begin{frame}
+    \frametitle{An Algorithm}
     An idea: start with $p_0 = c_n^k$, and then construct polynomials $p_1,p_2 ,\dots, $ so that $\supp(p_{i+1}) \subsetneq \supp(p_{i})$.
 
     Hopes:
@@ -906,6 +1037,33 @@ is at least $\eta_p$.
         \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
         \label{fig:name}
     \end{figure}
+\end{frame}
+\begin{frame}
+    \tiny{
+\begin{table}[H]
+\begin{center}
+    \begin{tabular}{c|c c c c c c}
+        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
+        \hline
+        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
+        \hline
+        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
+        \hline
+        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
+             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
+        \hline
+        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
+             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
+        \hline
+        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
+         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
+    \end{tabular}
+
+\end{center}
+\caption{A table describing the results of running an implementation of \Cref{alg:greedy} for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
+\end{table}}
 \end{frame}
 \begin{frame}
     \frametitle{Open Problems}
