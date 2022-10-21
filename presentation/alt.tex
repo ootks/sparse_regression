@@ -88,8 +88,47 @@
     \]
 
 \end{frame}
+\begin{block}{Sparse QCQP}
+    \begin{equation*}
+        \max_{S \subseteq [n]}
+        \begin{aligned}
+            \max\quad & x^{\intercal}A_0x\\
+            \st & x^{\intercal}A_1x = 1\\
+                &x \in \R^S
+        \end{aligned}
+    \end{equation*}
+\end{block}
+\end{frame}
 \begin{frame}
     \frametitle{Example}
+    \begin{block}{Sparse Linear Regression}
+        \begin{equation*}
+            \begin{aligned}
+            \min & \|Ax - b\|_2^2\\
+            \st & |\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=\linewidth]{slide3.jpg}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Sparse regression is a sparse QCQP where
+    \[
+        A_0 = A^{\intercal}bb^{\intercal}A
+    \]
+    \[
+        A_1 = A^{\intercal}A
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Another Example}
     \begin{block}{Sparse Maximum Eigenvalue}
         \begin{equation*}
             \begin{aligned}
@@ -102,61 +141,576 @@
     \end{block}
 \end{frame}
 \begin{frame}
-    \frametitle{Another Example}
-    \begin{block}{Sparse Linear Regression}
-        \begin{equation*}
-            \begin{aligned}
-            \min & \|Ax - b\|_2^2\\
-            \st & |\supp(x)| \le k.
-            \end{aligned}
-        \end{equation*}
-    \end{block}
+    \centering
+    \huge
+    {\color{gray}Existing Work and Experimental Results}
 \end{frame}
 \begin{frame}
-    \frametitle{Another Example}
+    There are many existing methods and even textbooks on sparse linear regression.
+    \begin{itemize}
+        \item Regularization based methods that add penalty terms to the standard OLS regression error that punish nonsparse solutions.
+            \begin{itemize}
+                \item \textbf{LASSO}
+                \item Ridge regression
+            \end{itemize}
+        \item Greedy methods that choose columns that minimize the error on each column in sequence.
+            \begin{itemize}
+                \item Orthogonal Matching Pursuit
+                \item Subspace pursuit
+            \end{itemize}
+        \item Integer Linear Programming based methods for exact solutions.
+    \end{itemize}
+
+    \pause
     \begin{figure}[h]
         \centering
-        \includegraphics[width=\linewidth]{slide3.jpg}
+        \includegraphics[width=0.8\linewidth]{lasso_citations}
+        \caption{This paper on a method for sparse regression has 40,000 citations.}%
     \end{figure}
 \end{frame}
 \begin{frame}
-    \frametitle{Another Example}
+    What will be new about this method?
+    \begin{itemize}
+        \item Fast and effective.
+        \item Connections to other areas in modern linear algebra.
+        \item Works for sparse linear regression and sparse PCA.
+        \item Potential to be sped up in future work.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.8\linewidth]{superconductivity.png}
+        \caption{Superconductivity. 81 Columns, 0.03 seconds at the maximum.}%
+        \label{fig:superconductivity}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.8\linewidth]{violentcrime.png}
+        \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
+        \label{fig:name}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \tiny{
+\begin{table}[H]
+\begin{center}
+    \begin{tabular}{c|c c c c c c}
+        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
+        \hline
+        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
+        \hline
+        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
+        \hline
+        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
+             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
+        \hline
+        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
+             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
+        \hline
+        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
+         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
+    \end{tabular}
+
+\end{center}
+\caption{A table describing the results of running an implementation of \Cref{alg:greedy} for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
+\end{table}}
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Bounds based on Polynomial Roots}
+\end{frame}
+\begin{frame}
+    \frametitle{Motivation}
+    \textbf{The following are the same.}
+    \vspace{0.3in}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Variational Characterization}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & x^{\intercal}Ax\\
+                    \st & x^{\intercal}x = 1\\
+                \end{aligned}
+            \end{equation*}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Characteristic Polynomial}
+            \[
+                \max \{t : \det(tI - A) = 0\}.
+            \]
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+    \frametitle{Motivation}
+    Whenever $A_1$ is PSD,
+    \vspace{0.3in}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{QCQP}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & x^{\intercal}A_0x\\
+                    \st & x^{\intercal}A_1x = 1\\
+                \end{aligned}
+            \end{equation*}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Root}
+            \[
+                \max \{t : \det(tA_1 - A_0) = 0\}.
+            \]
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Determinants}
+    A \emph{linear combination of minors} polynomial of degree $k$ is a polynomial in a symmetric matrix of indeterminants so that
+    \[
+        p(X) = \sum_{S \subseteq [n] : |S| = k}a_S\det(X|_S),
+    \]
+    Here $X|_S$ is the principal submatrix of $X$ indexed by the elements of $S$.
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Determinants}
+    \textbf{Idea:} $\max \{t : \det(tA_1|_S - A_0|_S) = 0\}$ is the value of the program
+    \begin{equation*}
+        \begin{aligned}
+            \max\quad & x^{\intercal}A_0x\\
+            \st & x^{\intercal}A_1x = 1\\
+                &x \in \R^S
+        \end{aligned}
+    \end{equation*}
+    We want to find the maximum out of all of these roots.
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Determinants}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{univariates.png}
+        \caption{Each subset of the columns has an associated polynomial.}%
+        \label{fig:variety}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Determinants}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{univariates_root.png}
+        \caption{We want the largest out of all of these roots.}%
+        \label{fig:variety}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Determinants}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.6\linewidth]{univariates_average_root.png}
+        \caption{Instead, take the average of all of these polynomials and find the maximum root of that.}%
+        \label{fig:variety}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \frametitle{An Inequality}
+    \begin{block}{Theorem}
+        Let $p$ be an LPM polynomial with nonnegative coefficients.  If $A_1$ is PSD, then
+        \begin{equation*}
+            \begin{aligned}
+                \max\quad & x^{\intercal}A_0x\\
+                \st & x^{\intercal}A_1x = 1\\
+                    &|\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+        is at least 
+        \[
+            \eta = \max \{y : p(A_1y-A_0) = 0 \}.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{An Inequality}
+    \begin{block}{Proof}
+        Suppose that $p(A_1 \eta-A_0) = 0$, then there must be some $S$ so that 
+        \[
+            \det(\eta A_1|_S - A_0|_S) \le 0.
+        \]
+        This means that the maximum root of this polynomial must be at least $\eta$, so that the corresponding optimization problem has a solution that is at least $\eta$.
+    \end{block}
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}A Concrete Version For Sparse Regression}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
     Sparse regression is a sparse QCQP where
     \[
-        A_0 = A^{\intercal}bb^{\intercal}A
+        A_0 = \hat{b}\hat{b}^{\intercal},
     \]
     \[
-        A_1 = A^{\intercal}A
+        A_1 = A^{\intercal}A,
+    \]
+    where $\hat{b} = A^{\intercal}b$.
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Plugging this into our expression for sparse linear regression, we want to compute
+    \[
+        \eta = \max \{y : c_n^k(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = 0 \}.
+    \]
+    Notice that when $y = 0$, this is $c_n^k(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal})$, because $\hat{b}\hat{b}^{\intercal}$ is rank 1.
+
+    \pause
+    In fact, when $y=0$, this vanishes with multiplicity $k-1$! The polynomial actually must have the form
+    \[
+        c_n^k(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = y^{d-1}(k_1y+k_2),
+    \]
+    for some constants $k_1$ and $k_2$.
+
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    \begin{block}{An explicit formula for linear regression}
+        \[
+            \eta = \frac{c_n^k(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{c_n^k(A^{\intercal}A)} - 1.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Sanity check: when $k = n$, this becomes
+    \[
+        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1.
+    \]
+    \pause
+    This turns out to be exactly the formula for the optimal error in ordinary least squares regression, and can be seen as a version of Cramer's rule for solving a system of linear equations.
+\end{frame}
+\begin{frame}
+    \frametitle{A Probabilistic Interpretation}
+    \pause
+    Let $p(X) = \sum_{S \subseteq [n] : |S| = k} a_S\det(X|_S)$ be LPM.
+    
+    \pause
+    Consider $\pi(S) \alpha a_S\det(AA^{\intercal}|_S)$ be the law of a \emph{weighted determinantal point process}. This selects a random subset of $[n]$ proportional to the determinant of $\det(AA^{\intercal}|_S)$. Then,
+    \[
+        \eta = \E[\ell(A_S, b)],
+    \]
+    where $\ell(A, b) = \min \{\|Ax - b\|^2\}$.
+\end{frame}
+
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Applications of this Inequality}
+\end{frame}
+\begin{frame}
+    \frametitle{An Inequality}
+    \begin{block}{Theorem}
+        Let $p$ be an LPM polynomial with nonnegative coefficients.  If $A_1$ is PSD, then
+        \begin{equation*}
+            \begin{aligned}
+                \max\quad & x^{\intercal}A_0x\\
+                \st & x^{\intercal}A_1x = 1\\
+                    &|\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+        is at least 
+        \[
+            \eta = \max \{y : p(A_1y-A_0) = 0 \}.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{What do we do with this inequality?}
+    Two questions:
+    \begin{itemize}
+        \item Are there LPM polynomials that we can find the roots of quickly?
+        \pause 
+        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
+        \pause
+        \item Is this inequality any good?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{What now?}
+    Two questions:
+    \begin{itemize}
+        \item \textbf{Are there LPM polynomials that we can find the roots of quickly?}
+        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
+        \item Is this inequality any good?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    Define
+    \[
+        c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
+    \]
+    \pause 
+    This is an LPM polynomial with very simple coefficients.
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    \begin{block}{Facts About Characteristic Coefficients}
+        $c_n^k(Y)$ is sometimes called a \emph{characteristic coefficient}, since it is a coefficient of the characteristic polynomial of $Y$, i.e.
+        \[
+            \det(Y + tI) = \sum_{j=0}^n c_n^{n-j}(Y) t^j.
+        \]
+        \pause
+        In particular, it is
+        \begin{itemize}
+            \item Basis invariant, so that $c_n^k(U^{\intercal} Y U) = c_n^k(Y)$ for any orthogonal matrix $U$.
+            \pause
+            \item Efficiently computable.
+            \pause
+            \item For $Y$ in the interior of $S^k_n$, $c_n^k(Y) > 0$.
+            \pause
+            \item If $X$ is PSD, then $c_n^k(tX+Y)$ has only real roots for any $Y$.
+        \end{itemize}
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Newton's Method for Real Rooted Polynomials}
+    \begin{block}{Theorem}
+        If $p(t)$ is a real rooted polynomial of degree $d$, then for large enough $t_0$, Newton's method converges to the maximum root of $p(t)$ in $O(d \log(t_0 / \epsilon))$ steps.
+    \end{block}
+    Interpolation let's me evaluate $p(t)$ at $d$ points, then apply Newton's method.
+\end{frame}
+\begin{frame}
+    \frametitle{What now?}
+    Two questions:
+    \begin{itemize}
+        \item Are there LPM polynomials that we can find the roots of quickly?
+            \begin{itemize}
+                \item Yes!
+            \end{itemize}
+        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
+        \item Is this inequality any good?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{What now?}
+    Two questions:
+    \begin{itemize}
+        \item Are there LPM polynomials that we can find the roots of quickly?
+            \begin{itemize}
+                \item Yes!
+            \end{itemize}
+        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
+            \begin{itemize}
+                \item Yes!
+            \end{itemize}
+        \item Is this inequality any good?
+            \begin{itemize}
+                \item Not really, but this can be fixed.
+            \end{itemize}
+    \end{itemize}
+    \pause
+    Both of these will be resolved by introducing different coefficients.
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Conditioning}
+\end{frame}
+\begin{frame}
+    \frametitle{Introducing Coefficients}
+    Recall
+    \[
+        c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
+    \]
+    \pause 
+    This averages over all supports of size $k$. We want to find a single support set.
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning}
+    \textbf{Idea:} Reduce the size of the support of $p$.
+    For a LPM polynomial $p$, and $i \in [n]$, define the conditioning.
+    \[
+        p|_i = \sum_{S : i \in S} a_S \det(X|_S).
+    \]
+    This has support strictly smaller than $p$. Is it better than $p$?
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning}
+    \begin{theorem}
+    For any LPM polynomial $p$ with nonnegative coefficients, there exists some $i$ so that
+    \[
+        \eta_{p|_i} \ge \eta_{p}.
+    \]
+    \end{theorem}
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning}
+    Consider
+        \begin{align*} 
+        \sum_{i \in [n]} p|_{i}&=\sum_{i \in [n]} \sum_{i \in  S} a_S \det(X|_S)\\
+                &=k\sum_{S} a_S \det(X|_S)\\
+                &=kp
+        \end{align*}
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning}
+    \[
+        \sum_{i\in [n]}p|_i(\eta_p) = kp(\eta_p) = 0.
+    \]
+    \pause
+    Therefore, for some $i$, $ p|_{i}(\eta_{p}) \le 0$.
+    \pause
+    This implies that the largest root of $p|_{i}$ is at least $\eta_{p}$.
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning and Determinantal Point Processes}
+    Recall that if we are working with sparse regression, for any LPM polynomial $p$,
+    \[
+        \eta_p = \E[\ell(A_S, b)],
+    \]
+    where the expectation is taken with respect to some weighted DPP.
+
+    Then,
+    \[
+        \eta_{p|_i} = \E[\ell(A_S, b)|i \in S],
     \]
 \end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    We want to compute
+    \[
+        p|_i = \sum_{S : i \in S} a_S \det(X|_S).
+    \]
+    How can we do this?
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    \emph{Idea: } Notice that
+    \begin{align*}
+        \frac{\partial}{\partial X_{ii}} p(X) &= \sum_{S} a_S \partial_{X_{ii}} \det(X|_{S})\\
+                               &= \sum_{S : i \in S} a_S \det(X|_{S \setminus i})
+    \end{align*}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    Also, recall the Schur complement identity for determinants:
+    \begin{align*}
+        \det(X) = X_{ii} \det(X \setminus i),
+    \end{align*}
+    where 
+    \[
+        X \setminus i = X - \frac{1}{X_{ii}} X_i X_i^{\intercal}.
+    \]
+    Here, $X_i$ is the $i^{th}$ column of $X$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    Putting these together,
+    \[
+        p|_i(X) = X_{ii} \frac{\partial}{\partial X_{ii}} p(X \setminus i).
+    \]
+    When $p = c_n^k$, $\frac{\partial}{\partial X_{ii}} p(X) = c_{n-1}^{k-1}(X)$, so 
+    \[
+        p|_i(X) = X_{ii} c_{n-1}^{k-1}(X \setminus i).
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    It's also true that if $p$ is LPM and $p(A_1 t - A_0)$ has real roots for all PSD $A_1$, then the same is true for $p|_i$.
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Algorithms}
+\end{frame}
+\begin{frame}
+    \frametitle{An Algorithm for Sparse QCQPs}
+    Putting it all together,
+    \begin{algorithm}[H]
+    \caption{The Greedy Conditioning Heuristic}
+    \label{alg:greedy}
+    \begin{algorithmic}
+        \State $T \gets \varnothing$
+        \For{$t = 1 \dots k$}
+            \State $j \gets \argmax \eta_{p|_{T + j}}$
+            \State $T \gets T + j$
+        \EndFor
+
+        \Return $T$
+    \end{algorithmic}
+    \end{algorithm}
+
+    We have seen that this will always produce an answer which is at least $\eta_p$, and we have means of computing all of these things efficiently.
+\end{frame}
+\begin{frame}
+    \frametitle{An Algorithm for Sparse QCQPs}
+    This already gives the accuracy competitive with LASSO and others that we saw at the beginning of the talk, but computing everything naively is slow (1000x slower than LASSO)!
+
+    \pause
+    We can speed it up by a lot by doing incremental computations: instead of recomputing characteristic coefficients, we will use efficient update formulas and diagonalization maintance.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Let $X = QDQ^{\intercal}$ be the diagonalization of a matrix $X$, i.e.
+    \begin{itemize}
+        \item $Q$ is the orthogonal matrix whose columns are eigenvectors of $X$.
+        \item $D$ is diagonal and its entries are eigenvalues of $X$.
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    $c_n^k(X)$ is given by the elementary symmetric polynomial in the eigenvalues of $X$:
+    \[
+        c_n^k(X) = \sum_{S \subseteq [n],|S| = k} \prod_{i \in S}\lambda_i,
+    \]
+    where the $\lambda_i$ are eigenvalues of $X$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    If the diagonalization of $X$ is given, the characteristic coefficient can be computed in $O(nk)$ time using dynamic programming to compute the elementary symmetric polynomial in the eigenvalues.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Now, what if we want to compute
+    \[
+        p|_i(X) = X_{ii} c_{n-1}^{k-1}(X - \frac{1}{X_{ii}X_iX_i^{\intercal})?
+    \]
+    \textbf{Idea: } Use rank 1 updates instead of recomputing.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Because $\frac{1}{X_{ii}X_iX_i^{\intercal}$ is rank 1, the first order Taylor expansion gives an exact answer:
+    \[
+        c_{n-1}^{k-1}(X - \frac{1}{X_{ii}X_iX_i^{\intercal}) = c_{n-1}^{k-1}(X)  - \frac{1}{X_{ii}X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i.
+    \]
+    If we already have $c_{n-1}^{k-1}(X)$ for each $i$, we really just want to compute
+    \[
+        X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i.
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    \textbf{Idea:} We can change basis because characteristic coefficients are basis invariant, so
+    \[
+        X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i = 
+        Q_i^{\intercal}D\nabla c_{n-1}^{k-1}(D)DQ_i,
+    \]
+    where $Q_i$ is the $i^{th}$ row of $Q$.
+\end{frame}
+
 %\begin{frame}
 %    \centering
 %    \huge
 %    {\color{gray}A Warm Up}
-%\end{frame}
-%\begin{frame}
-%    \frametitle{A Warm Up}
-%    \textbf{Why are these the same? Both give $\lambda_{max}(A)$.}
-%    \vspace{0.3in}
-%    \begin{columns}
-%        \begin{column}{0.48\textwidth}
-%            \begin{block}{Variational Characterization}
-%            \begin{equation*}
-%                \begin{aligned}
-%                    \max\quad & x^{\intercal}Ax\\
-%                    \st & x^{\intercal}x = 1\\
-%                \end{aligned}
-%            \end{equation*}
-%            \end{block}
-%        \end{column}
-%        \begin{column}{0.48\textwidth}
-%            \begin{block}{Characteristic Polynomial}
-%            \[
-%                \max \{t : \det(tI - A) = 0\}.
-%            \]
-%            \end{block}
-%        \end{column}
-%    \end{columns}
 %\end{frame}
 %\begin{frame}
 %\frametitle{Semidefinite Programming Relaxations}
@@ -428,35 +982,6 @@
     \end{block}
 
     A matrix is in $S^k_n$ if and only if all \emph{sufficiently small} submatrices have nonnegative determinant.
-\end{frame}
-\begin{frame}
-    \frametitle{Characteristic Coefficients}
-    Define
-    \[
-        c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
-    \]
-    \pause 
-    Our fact implies that $c_n^k$ is nonnegative on all of $S^k_n$.
-\end{frame}
-\begin{frame}
-    \frametitle{Characteristic Coefficients}
-    \begin{block}{A Note on Characteristic Coefficients}
-        $c_n^k(Y)$ is sometimes called a \emph{characteristic coefficient}, since it is a coefficient of the characteristic polynomial of $Y$, i.e.
-        \[
-            \det(Y + tI) = \sum_{j=0}^n c_n^{n-j}(Y) t^j.
-        \]
-        \pause
-        In particular, it is
-        \begin{itemize}
-            \item Basis invariant, so that $c_n^k(U^{\intercal} Y U) = c_n^k(Y)$ for any orthogonal matrix $U$.
-            \pause
-            \item Efficiently computable.
-            \pause
-            \item For $Y$ in the interior of $S^k_n$, $c_n^k(Y) > 0$.
-            \pause
-            \item Hyperbolic... (undefined)
-        \end{itemize}
-    \end{block}
 \end{frame}
 \begin{frame}
     \frametitle{Characteristic Coefficients}
@@ -811,182 +1336,9 @@
     \end{equation*}
 \end{frame}
 \begin{frame}
-    \frametitle{Example}
-    Plugging this into our expression for sparse linear regression, we want to compute
-    \[
-        \eta = \max \{y : c_n^k(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = 0 \}.
-    \]
-    where $\hat{b} = A^{\intercal}b$.
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    \begin{block}{An explicit formula for linear regression}
-        \[
-            \eta = \frac{c_n^k(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{c_n^k(A^{\intercal}A)} - 1.
-        \]
-    \end{block}
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    Sanity check: when $k = n$, this becomes
-    \[
-        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1.
-    \]
-    \pause
-    This turns out to be exactly the formula for the optimal error in ordinary least squares regression, and can be seen as a version of Cramer's rule for solving a system of linear equations.
-\end{frame}
-\begin{frame}
-    \frametitle{What now?}
-    Two questions:
-    \begin{itemize}
-        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
-        \pause
-        \item Is this formula any good?
-    \end{itemize}
-\end{frame}
-\begin{frame}
-    \frametitle{What now?}
-    Two questions:
-    \begin{itemize}
-        \item Can we efficiently find a solution to the sparse QCQP that does at least as well as this result guarantees?
-            \begin{itemize}
-                \item Yes!
-            \end{itemize}
-
-        \item Is this formula any good?
-            \begin{itemize}
-                \item No! But we can improve.
-            \end{itemize}
-    \end{itemize}
-    Both of these can be done using the same idea of introducing coefficients.
-\end{frame}
-\begin{frame}
     \centering
     \huge
     {\color{gray}Introducing Coefficients}
-\end{frame}
-\begin{frame}
-    \frametitle{Introducing Coefficients}
-    Recall
-    \[
-        c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
-    \]
-\end{frame}
-\begin{frame}
-    \frametitle{Introducing Coefficients}
-    A polynomial is said to be a linear principal minors polynomial (LPM) if there are $a_S$ so that
-    \[
-        p(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}} a_S \det(Y|_S).
-    \]
-\end{frame}
-\begin{frame}
-    \frametitle{Introducing Coefficients}
-    For any LPM polynomial $p$ with nonnegative coefficients, and any $Y \in S^k_n$, 
-    \[
-        p(Y) \ge 0.
-    \]
-    \pause
-    So, if $A_1$ is PSD, then 
-    \[
-        \eta_p = \max \{y : p(A_1y-A_0) = 0 \}.
-    \]
-    is a lower bound on the value of the dual problem.
-\end{frame}
-\begin{frame}
-    \frametitle{Introducing Coefficients}
-    We can be a little more refined: let $p$ be LPM, and let 
-    \[
-        \supp(p) = \{S : a_S \neq 0\}.
-    \]
-    \pause
-    Then,
-    \begin{block}{Theorem}
-        Let $p$ be an LPM polynomial with nonnegative coefficients.
-        Consider the structured sparse QCQP:
-        \begin{equation*}
-            \begin{aligned}
-                \max\quad & x^{\intercal}A_0x\\
-                \st & x^{\intercal}A_1x = 1\\
-                    & \supp(x) \in \supp(p)
-            \end{aligned},
-        \end{equation*}
-        then there is some feasible $x$ acheiving an objective of at least $\eta_p$.
-    \end{block}
-\end{frame}
-\begin{frame}
-    \frametitle{Introducing Coefficients}
-    Also, if $p = \det(X|_S)$, for some $S$, then $\eta_p$ is exactly
-    \begin{equation*}
-        \begin{aligned}
-            \max\quad & x^{\intercal}A_0x\\
-            \st & x^{\intercal}A_1x = 1\\
-                & \supp(x) = S
-        \end{aligned}.
-    \end{equation*}
-\end{frame}
-\begin{frame}
-    \frametitle{An Algorithm}
-    An idea: start with $p_0 = c_n^k$, and then construct polynomials $p_1,p_2 ,\dots, $ so that $\supp(p_{i+1}) \subsetneq \supp(p_{i})$.
-
-    Hopes:
-    \begin{itemize}
-        \item At each step, $\eta_{p_i}$ is increasing.
-        \item At the end, $p_k$ is supported on a single set.
-        \pause
-        \item $p_k$ can be efficiently evaluated!
-    \end{itemize}
-\end{frame}
-\begin{frame}
-    \frametitle{Conditioning}
-    For a LPM polynomial $p$, and $i \in [n]$, define
-    \[
-        p|_i = \sum_{S : i \in S} a_S \det(X|_S).
-    \]
-    This has support strictly smaller than $p$. Is it better than $p$?
-\end{frame}
-\begin{frame}
-    \frametitle{Conditioning}
-    \begin{theorem}
-    For any LPM polynomial $p$ with nonnegative coefficients, there exists some $i$ so that
-    \[
-        \eta_{p|_i} \ge \eta_{p}.
-    \]
-    \end{theorem}
-\end{frame}
-\begin{frame}
-    \frametitle{Conditioning}
-    Consider
-        \begin{align*} 
-        \sum_{i \in [n]} p|_{i}&=\sum_{i \in [n]} \sum_{i \in  S} a_S \det(X|_S)\\
-                &=k\sum_{S} a_S \det(X|_S)\\
-                &=kp
-        \end{align*}
-\end{frame}
-\begin{frame}
-    \frametitle{Conditioning}
-    \[
-        \sum_{i\in [n]}p|_i(\eta_p) = kp(\eta_p) = 0.
-    \]
-    \pause
-    Therefore, for some $i$, $ p|_{i}(\eta_{p}) \le 0$.
-    \pause
-    This implies that the largest root of $p|_{i}$ is at least $\eta_{p}$.
-\end{frame}
-\begin{frame}
-    \begin{algorithm}[H]
-    \frametitle{An Algorithm for Sparse QCQPs}
-    \caption{The Greedy Conditioning Heuristic}
-    \label{alg:greedy}
-    \begin{algorithmic}
-        \State $T \gets \varnothing$
-        \For{$t = 1 \dots k$}
-            \State $j \gets \argmax \eta_{p|_{T + j}}$
-            \State $T \gets T + j$
-        \EndFor
-
-        \Return T
-    \end{algorithmic}
-    \end{algorithm}
 \end{frame}
 \begin{frame}
     \frametitle{An Algorithm for Sparse QCQPs}
@@ -1022,49 +1374,6 @@ is at least $\eta_p$.
     {\color{gray}Experimental Results}
 \end{frame}
 
-\begin{frame}
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.8\linewidth]{superconductivity.png}
-        \caption{Superconductivity. 81 Columns, 0.03 seconds at the maximum.}%
-        \label{fig:superconductivity}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.8\linewidth]{violentcrime.png}
-        \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
-        \label{fig:name}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \tiny{
-\begin{table}[H]
-\begin{center}
-    \begin{tabular}{c|c c c c c c}
-        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
-        \hline
-        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
-             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
-        \hline
-        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
-             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
-        \hline
-        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
-             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
-        \hline
-        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
-             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
-        \hline
-        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
-         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
-    \end{tabular}
-
-\end{center}
-\caption{A table describing the results of running an implementation of \Cref{alg:greedy} for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
-\end{table}}
-\end{frame}
 \begin{frame}
     \frametitle{Open Problems}
     \begin{itemize}
