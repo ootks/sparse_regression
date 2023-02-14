@@ -144,7 +144,7 @@
 \begin{frame}
     \centering
     \huge
-    {\color{gray}Existing Work and Experimental Results}
+    {\color{gray}Existing Work}
 \end{frame}
 \begin{frame}
     There are many existing methods and even textbooks on sparse linear regression.
@@ -180,49 +180,6 @@
 \end{frame}
 
 \begin{frame}
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.8\linewidth]{superconductivity.png}
-        \caption{Superconductivity. 81 Columns, 0.03 seconds at the maximum.}%
-        \label{fig:superconductivity}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \begin{figure}[h]
-        \centering
-        \includegraphics[width=0.8\linewidth]{violentcrime.png}
-        \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
-        \label{fig:name}
-    \end{figure}
-\end{frame}
-\begin{frame}
-    \tiny{
-\begin{table}[H]
-\begin{center}
-    \begin{tabular}{c|c c c c c c}
-        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
-        \hline
-        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
-             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
-        \hline
-        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
-             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
-        \hline
-        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
-             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
-        \hline
-        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
-             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
-        \hline
-        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
-         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
-    \end{tabular}
-
-\end{center}
-\caption{A table describing the results of running our algorithm for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
-\end{table}}
-\end{frame}
-\begin{frame}
     \centering
     \huge
     {\color{gray}Bounds based on Polynomial Roots}
@@ -242,6 +199,7 @@
             \end{equation*}
             \end{block}
         \end{column}
+        \pause
         \begin{column}{0.48\textwidth}
             \begin{block}{Characteristic Polynomial}
             \[
@@ -362,109 +320,6 @@
         This means that the maximum root of this polynomial must be at least $\eta$, so that the corresponding optimization problem has a solution that is at least $\eta$.
     \end{block}
 \end{frame}
-\begin{frame}
-    \centering
-    \huge
-    {\color{gray}A Concrete Version For Sparse Regression}
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    Sparse regression is a sparse QCQP where
-    \[
-        A_0 = \hat{b}\hat{b}^{\intercal},
-    \]
-    \[
-        A_1 = A^{\intercal}A,
-    \]
-    where $\hat{b} = A^{\intercal}b$.
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    Plugging this into our expression for sparse linear regression, we want to compute
-    \[
-        \eta = \max \{y : p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = 0 \},
-    \]
-    for an LPM polynomial $p$.
-
-    \pause
-    When $y = 0$, 
-    \[
-        p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = p(\hat{b}\hat{b}^{\intercal}) = 0,
-    \]
-    because $\hat{b}\hat{b}^{\intercal}$ is rank 1.
-
-
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    In fact, when $y=0$, this vanishes with multiplicity $d-1$! The polynomial actually must have the form
-    \[
-        p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = y^{d-1}(k_1y+k_2),
-    \]
-    for some constants $k_1$ and $k_2$.
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    \begin{block}{An explicit formula for linear regression}
-        \[
-            \eta = \frac{p(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{p(A^{\intercal}A)} - 1.
-        \]
-    \end{block}
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    Sanity check: when $k = n$, this becomes
-    \[
-        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1.
-    \]
-    \pause
-    This turns out to be exactly the formula for the optimal error in ordinary least squares regression, and can be seen as a version of Cramer's rule for solving a system of linear equations.
-\end{frame}
-\begin{frame}
-    \frametitle{Example}
-    \begin{block}{An explicit formula for linear regression}
-        \[
-            \eta = \frac{p(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{p(A^{\intercal}A)} - 1.
-        \]
-    \end{block}
-    \pause
-    This same expression appears in other places!
-\end{frame}
-\begin{frame}
-    \frametitle{A Probabilistic Interpretation}
-    \[
-        p(X) = \sum_{S \subseteq [n] : |S| = k} a_S\det(X|_S).
-    \]
-    
-    \pause
-    For a subset $S \subseteq [n]$ with $|S| = k$,
-    \[
-        \pi(S) = \frac{a_S\det(A^{\intercal}A|_S)}{p(A^{\intercal}A)}.
-    \]
-    This is a probability distribution over subsets of size $k$.
-\end{frame}
-\begin{frame}
-    \frametitle{A Probabilistic Interpretation}
-    \[
-        \pi(S) = \frac{a_S\det(A^{\intercal}A|_S)}{p(A^{\intercal}A)}
-    \]
-    
-     is called \emph{weighted determinantal point process}. This selects a random subset of $[n]$ proportional to the determinant of $\det(A^{\intercal}A|_S)$.
-
-     \pause 
-     DPPs are very popular in machine learning because they model \emph{diversity}; a subset is more likely to be chosen if its columns are very far apart.
-\end{frame}
-
-\begin{frame}
-    \frametitle{A Probabilistic Interpretation}
-    \begin{block}{A Probabilistic Interpretation}
-    \[
-        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1 = \E[\ell(A_S, b)].
-    \]
-    \end{block}
-    where $\ell(A, b) = \max \{\|b\|^2 - \|Ax - b\|_2^2 : x \in \R^k\}$ the norm of the projection of $b$ onto the column space of $A$, and $S$ is chosen from a weighted DPP.
-\end{frame}
-
 \begin{frame}
     \centering
     \huge
@@ -590,32 +445,6 @@
     This has support strictly smaller than $p$.
 \end{frame}
 \begin{frame}
-    \frametitle{Conditioning and Determinantal Point Processes}
-    \textbf{Why is it called conditioning?}
-    Recall that if we are working with sparse regression, for any LPM polynomial $p$,
-    \[
-        \eta_p = \E[\ell(A_S, b)],
-    \]
-    where the expectation is taken with respect to a weighted DPP.
-
-    Then,
-    \[
-        \eta_{p|_i} = \E[\ell(A_S, b)|i \in S],
-    \]
-\end{frame}
-\begin{frame}
-    \[
-        p|_i(X) = \sum_{S : i \in S} a_S \det(X|_S).
-    \]
-    \pause
-    Questions
-    \begin{itemize}
-        \item Is $p|_i$ better than $p$ for some $i$?
-        \item Can we compute $\eta|_{p|_i}$ quickly?
-    \end{itemize}
-    
-\end{frame}
-\begin{frame}
     \frametitle{Conditioning}
     \begin{theorem}
     For any LPM polynomial $p$ with nonnegative coefficients, there exists some $i$ so that
@@ -714,6 +543,49 @@
     \end{algorithm}
 
     We have seen that this will always produce an answer which is at least $\eta_p$, and we have means of computing all of these things efficiently.
+\end{frame}
+\begin{frame}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.8\linewidth]{superconductivity.png}
+        \caption{Superconductivity. 81 Columns, 0.03 seconds at the maximum.}%
+        \label{fig:superconductivity}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.8\linewidth]{violentcrime.png}
+        \caption{Communities. 101 columns. Under 0.03 seconds at the maximum.}%
+        \label{fig:name}
+    \end{figure}
+\end{frame}
+\begin{frame}
+    \tiny{
+\begin{table}[H]
+\begin{center}
+    \begin{tabular}{c|c c c c c c}
+        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
+        \hline
+        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
+        \hline
+        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
+        \hline
+        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
+             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
+        \hline
+        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
+             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
+        \hline
+        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
+         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
+    \end{tabular}
+
+\end{center}
+\caption{A table describing the results of running our algorithm for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
+\end{table}}
 \end{frame}
 \begin{frame}
     \frametitle{An Algorithm for Sparse QCQPs}
@@ -853,6 +725,226 @@
     \end{block}
     In theory, this can be brought down to $O(n^{\omega})$ time using fast matrix multiplication and recent results on diagonalization.
 \end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Concrete Aspects For Sparse Regression}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Sparse regression is a sparse QCQP where
+    \[
+        A_0 = \hat{b}\hat{b}^{\intercal},
+    \]
+    \[
+        A_1 = A^{\intercal}A,
+    \]
+    where $\hat{b} = A^{\intercal}b$.
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Plugging this into our expression for sparse linear regression, we want to compute
+    \[
+        \eta = \max \{y : p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = 0 \},
+    \]
+    for an LPM polynomial $p$.
+
+    \pause
+    When $y = 0$, 
+    \[
+        p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = p(\hat{b}\hat{b}^{\intercal}) = 0,
+    \]
+    because $\hat{b}\hat{b}^{\intercal}$ is rank 1.
+
+
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    In fact, when $y=0$, this vanishes with multiplicity $d-1$! The polynomial actually must have the form
+    \[
+        p(A^{\intercal}Ay-\hat{b}\hat{b}^{\intercal}) = y^{d-1}(k_1y+k_2),
+    \]
+    for some constants $k_1$ and $k_2$.
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    \begin{block}{An explicit formula for linear regression}
+        \[
+            \eta = \frac{p(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{p(A^{\intercal}A)} - 1.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    Sanity check: when $k = n$, this becomes
+    \[
+        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1.
+    \]
+    \pause
+    This turns out to be exactly the formula for the optimal error in ordinary least squares regression, and can be seen as a version of Cramer's rule for solving a system of linear equations.
+\end{frame}
+\begin{frame}
+    \frametitle{Example}
+    \begin{block}{An explicit formula for linear regression}
+        \[
+            \eta = \frac{p(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{p(A^{\intercal}A)} - 1.
+        \]
+    \end{block}
+    \pause
+    This same expression appears in other places!
+\end{frame}
+\begin{frame}
+    \frametitle{A Probabilistic Interpretation}
+    \[
+        p(X) = \sum_{S \subseteq [n] : |S| = k} a_S\det(X|_S).
+    \]
+    
+    \pause
+    For a subset $S \subseteq [n]$ with $|S| = k$,
+    \[
+        \pi(S) = \frac{a_S\det(A^{\intercal}A|_S)}{p(A^{\intercal}A)}.
+    \]
+    This is a probability distribution over subsets of size $k$.
+\end{frame}
+\begin{frame}
+    \frametitle{A Probabilistic Interpretation}
+    \[
+        \pi(S) = \frac{a_S\det(A^{\intercal}A|_S)}{p(A^{\intercal}A)}
+    \]
+    
+     is called \emph{weighted determinantal point process}. This selects a random subset of $[n]$ proportional to the determinant of $\det(A^{\intercal}A|_S)$.
+
+     \pause 
+     DPPs are very popular in machine learning because they model \emph{diversity}; a subset is more likely to be chosen if its columns are very far apart.
+\end{frame}
+
+\begin{frame}
+    \frametitle{A Probabilistic Interpretation}
+    \begin{block}{A Probabilistic Interpretation}
+    \[
+        \eta = \frac{\det(A^{\intercal}A+\hat{b}\hat{b}^{\intercal})}{\det(A^{\intercal}A)} - 1 = \E[\ell(A_S, b)].
+    \]
+    \end{block}
+    where $\ell(A, b) = \max \{\|b\|^2 - \|Ax - b\|_2^2 : x \in \R^k\}$ the norm of the projection of $b$ onto the column space of $A$, and $S$ is chosen from a weighted DPP.
+\end{frame}
+\begin{frame}
+    \frametitle{Conditioning and Determinantal Point Processes}
+    \textbf{Why is it called conditioning?}
+    Recall that if we are working with sparse regression, for any LPM polynomial $p$,
+    \[
+        \eta_p = \E[\ell(A_S, b)],
+    \]
+    where the expectation is taken with respect to a weighted DPP.
+
+    Then,
+    \[
+        \eta_{p|_i} = \E[\ell(A_S, b)|i \in S],
+    \]
+\end{frame}
+\begin{frame}
+    \[
+        p|_i(X) = \sum_{S : i \in S} a_S \det(X|_S).
+    \]
+    \pause
+    Questions
+    \begin{itemize}
+        \item Is $p|_i$ better than $p$ for some $i$?
+        \item Can we compute $\eta|_{p|_i}$ quickly?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \centering
+    \huge
+    {\color{gray}Conical Programming and Hyperbolicity Cones}
+\end{frame}
+\begin{frame}
+\frametitle{Concrete Question}
+What happens if $A_1$ is not PSD? What happens if I have multiple constraints?
+\end{frame}
+\begin{frame}
+\frametitle{Stability}
+\begin{block}{Recall}
+    If $X$ is PSD, then $c_n^k(tX+Y)$ has only real roots for any $Y$.
+\end{block}
+This is what allows us to use Newton's method to find maximal roots.
+\end{frame}
+\begin{frame}
+\frametitle{Stability}
+\begin{block}{Definition}
+    A polynomial $p$ in a symmetric matrix of variables is said to be PSD-stable if for any PSD $X$, and symmetric matrix $Y$, $p(tX+Y)$ has only real roots.
+\end{block}
+\pause
+Characteristic coefficients are PSD stable.
+\pause 
+Conditionings of PSD stable polynomials are PSD stable.
+\end{frame}
+
+\begin{frame}
+\frametitle{Stability}
+PSD stability has a lot of nice properties.
+\begin{block}{Theorem}
+    If, for any symmetric matrix $Y$, $p(tI+Y)$ has real roots, and $p$ does not vanish at any PSD matrix, then $p$ is PSD stable.
+\end{block}
+\pause
+\begin{block}{Theorem}
+    If $p$ is an LPM polynomial, then $p$ is PSD stable if and only if for any diagonal matrix $D$, $p(tI+D)$ is real rooted.
+\end{block}
+\end{frame}
+
+\begin{frame}
+\frametitle{Stability}
+We now come to the definition of the hyperbolicity cone:
+\begin{block}{Definition}
+    If $p$ is PSD stable, then the open hyperbolicity cone of $p$ is the largest connected set containing $I$ on which  $p$ does not vanish. The (closed) hyperbolicity cone of $p$, $H(p)$, is the closure of the open hyperbolicity cone.
+\end{block}
+\begin{block}{Theorem}
+    The hyperbolicity cone of $p$ is convex, and $\log(p)$ is a self-concordant barrier function for the hyperbolicity cone.
+\end{block}
+\end{frame}
+\begin{frame}
+    \begin{block}{Theorem}
+        For any $A_1$ so that $A_1$ has some PSD $k\times k$ submatrix, and any PSD-stable LPM polynomial $p$,
+        \begin{equation}
+            \begin{aligned}
+                \max\quad & \tr(A_0X)\\
+                \st & \tr(A_1X) = 1\\
+                    & X \in H(p)\\
+            \end{aligned}
+        \end{equation}
+        is a lower bound on the corresponding sparse QCQP.
+        If $A_1$ is PSD, this agrees with $\eta$.
+    \end{block}
+\end{frame}
+\begin{frame}
+    \begin{block}{Theorem}
+        For any $A_1$ so that $A_1$ has some PSD $k\times k$ submatrix, and any PSD-stable LPM polynomial $p$,
+        \[
+            \eta = \max \{t : A_1t + A_0 \in H(p) \}
+        \]
+
+        is a lower bound on the corresponding sparse QCQP.
+        If $A_1$ is PSD, this agrees with the earlier definition of $\eta$.
+    \end{block}
+\end{frame}
+\begin{frame}
+    We can also deal with two constraints, as long as one is PSD.
+
+    Consider 2-constraint sparse QCQP 
+    \begin{equation}
+        \begin{aligned}
+            \max\quad & x^{\intercal}A_0x\\
+            \st & x^{\intercal}A_1x = 1\\
+                & x^{\intercal}A_2x = 1\\
+                & \|x\|_0 \le k
+        \end{aligned}
+    \end{equation}
+    Then, 
+    \[
+        \max \{s+t : sA_1+tA_2+A_0 \in H(p)\}
+    \]
+    is a lower bound on the optimum value of this sparse QCQP.
+\end{frame}
+
 \begin{frame}
     \frametitle{Conclusions}
     \begin{itemize}
