@@ -1,0 +1,457 @@
+\documentclass{beamer}
+
+\usetheme[progressbar=frametitle]{metropolis}
+\usepackage{appendixnumberbeamer}
+
+\usepackage{booktabs}
+\usepackage[scale=2]{ccicons}
+
+\usepackage{pgfplots}
+\usepgfplotslibrary{dateplot}
+
+\usepackage{xspace}
+\newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
+
+\usepackage{amsthm, amsmath, amsfonts, amssymb}
+\usepackage{relsize}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{bm}
+\usepackage[english]{babel}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[parfill]{parskip}
+
+%Define theorem formatting
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Hom}{\textbf{\text{Hom}}}
+\newcommand{\PP}{\textbf{P}}
+\newcommand{\SPACE}{\textbf{SPACE}}
+\newcommand{\NP}{\textbf{NP}}
+\newcommand{\POS}{\mathcal{P}}
+\newcommand{\SAT}{\textbf{SAT}}
+\newcommand{\pard}[2]{\frac{\partial #1}{\partial #2}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\supp}{supp}
+\DeclareMathOperator{\SDP}{SDP}
+\DeclareMathOperator{\CUT}{MAXCUT}
+\DeclareMathOperator{\conv}{\operatorname{conv}}
+\DeclareMathOperator{\FW}{FW}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\rank}{rank}
+\newcommand{\st}{{\text{ s.t. }}}
+\newcommand{\Sym}{\R^{n\times n}_{sym}}
+\renewcommand\top[2]{\genfrac{}{}{0pt}{}{#1}{#2}}
+\newcommand\twoline[2]{\genfrac{}{}{0pt}{}{#1}{#2}}
+
+\colorlet{shadecolor}{gray!70}
+\setbeamercolor{block body}{bg=shadecolor!30,fg=black}
+
+
+\title{Quadratic Programs with Sparsity Constraints}
+\author{Kevin Shu\inst{1}}
+\institute{\inst{1} Georgia Institute of Technology}
+\date{}
+
+\begin{document}
+\frame{\titlepage}
+\begin{frame}
+    \frametitle{Sparse Maximum Eigenvalue}
+    \begin{block}{Sparse Maximum Eigenvalue}
+        \begin{equation*}
+            \begin{aligned}
+                \max\quad & x^{\intercal}Ax\\
+                \st & x^{\intercal}x = 1\\
+                    &|\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Maximum Eigenvalue}
+    Equivalently, if $A|_S$ is the principal submatrix of $A$ indexed by $S$,
+    \begin{block}{Sparse Maximum Eigenvalue}
+        \[\max \{ \lambda_{max}(A|_S) : |S| = k\}.\]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Nonsparse Equivalence}
+    \textbf{The following are the same.}
+    \vspace{0.3in}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Variational Characterization}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & x^{\intercal}Ax\\
+                    \st & x^{\intercal}x = 1\\
+                \end{aligned}
+            \end{equation*}
+            \end{block}
+        \end{column}
+        \pause
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Characteristic Polynomial}
+            \[
+                \max \{t : \det(tI - A) = 0\}.
+            \]
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+    \frametitle{Sparse Equivalence}
+    \textbf{The following are the same.}
+    \vspace{0.3in}
+    \begin{columns}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Sparse Maximum Eigenvalue}
+            \begin{equation*}
+                \begin{aligned}
+                    \max\quad & x^{\intercal}Ax\\
+                    \st & x^{\intercal}x = 1\\
+                        & |\supp(x)| \le k
+                \end{aligned}
+            \end{equation*}
+            \end{block}
+        \end{column}
+        \pause
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Sparse Characteristic Polynomial}
+            \[
+                \max \{t : \prod_{|S| = k}\det(tI - A|_S) = 0\}.
+            \]
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+\begin{frame}
+    \frametitle{Motivation}
+    \begin{itemize}
+        \item $\prod_{|S| = k}\det(tI - A|_S)$ is too complicated! We can't compute it.
+        \pause 
+        \item Idea: what if we try $\sum_{|S| = k}\det(tI - A|_S)$ instead?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    Define \textbf{the characteristic coefficient}
+    \[
+        c_n^k(Y) = \sum_{\top{S \subseteq [n]}{|S| = k}}  \det(Y|_S).
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients}
+    \begin{block}{Facts About Characteristic Coefficients}
+        $c_n^k(Y)$ is sometimes called a \emph{characteristic coefficient}, since it is a coefficient of the characteristic polynomial of $Y$, i.e.
+        \[
+            \det(Y + tI) = \sum_{j=0}^n c_n^{n-j}(Y) t^j.
+        \]
+        \pause
+        In particular, it is
+        \begin{itemize}
+            \item Basis invariant, so that $c_n^k(U^{\intercal} Y U) = c_n^k(Y)$ for any orthogonal matrix $U$.
+            \pause
+            \item Efficiently computable.
+            \pause
+            \item If $X$ is PSD, then $c_n^k(tX+Y)$ has only real roots for any $Y$.
+        \end{itemize}
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients and Sparse Eigenvalues}
+    \begin{block}{Theorem}
+        \begin{equation*}
+            \begin{aligned}
+                \max\quad & x^{\intercal}Ax\\
+                \st & x^{\intercal}x = 1\\
+                    &|\supp(x)| \le k.
+            \end{aligned}
+        \end{equation*}
+        is at least 
+        \[
+            \eta = \max \{t : c_n^k(tI - A) = 0 \}.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients and Sparse Eigenvalues}
+    \textbf{Idea of the proof:} For $t$ large enough, $\det(tI - A|_S) > 0$ for every $S$, and if $c_n^k(\eta I - A) = 0,$ then for some $S$, $\det(\eta I-A|_S) \le 0$.
+
+    Between $\eta$ and $\infty$, there is some $S$ so that $\det(tI- A|_S) = 0$, and this is a sparse eigenvalue of $A$.
+\end{frame}
+\begin{frame}
+    \frametitle{What do we do with this inequality?}
+    \begin{itemize}
+        \item Can we efficiently find the value of $\eta$ promised in the last theorem?
+        \item Can we make this inequality sharper?
+        \item Can we efficiently find a sparse \emph{eigenvector} that does at least as well as this bound promises?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Questions}
+    \begin{itemize}
+        \item \textbf{Can we efficiently find the value of $\eta$ promised in the last theorem?}
+        \item Can we make this inequality sharper?
+        \item Can we efficiently find a sparse \emph{eigenvector} that does at least as well as this bound promises?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Newton's Method for Real Rooted Polynomials}
+    \begin{block}{Theorem}
+        If $p(t)$ is a real rooted polynomial of degree $d$, then for large enough $t_0$, Newton's method converges to the maximum root of $p(t)$ in $O(d \log(t_0 / \epsilon))$ steps.
+    \end{block}
+    Interpolation lets evaluate $p(t)$ at $d$ points, then apply Newton's method for fast solving.
+\end{frame}
+\begin{frame}
+    \frametitle{Questions}
+    \begin{itemize}
+        \item Can we efficiently find the value of $\eta$ promised in the last theorem?
+        \item \textbf{Can we make this inequality sharper?}
+        \item Can we efficiently find a sparse \emph{eigenvector} that does at least as well as this bound promises?
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Introducing Coefficients}
+    We define 
+    \[
+        c_{n,T}^k(Y) = \sum_{\top{T \subseteq S \subseteq [n]}{|S| = k}}  \det(Y|_S).
+    \]
+    This is a restricted sum that only sums over subsets of $[n]$ containing $T$.
+
+    Similarly, define $\eta_T$ to be 
+    \[
+        \max \{ t : c_{n,T}^k(tI - A) = 0\}.
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Questions}
+    \begin{itemize}
+        \item Can we efficiently find the value of $\eta$ promised in the last theorem?
+        \item Can we make this inequality sharper?
+        \item \textbf{Can we efficiently find a sparse \emph{eigenvector} that does at least as well as this bound promises?}
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Characteristic Coefficients and Sparse Eigenvalues}
+    \begin{block}{Theorem}
+        \begin{itemize}
+            \item $\eta_T$ is a lower bound on the maximum $k$-sparse eigenvalue of $A$.
+            \item For any $T$, there is some $i$ so that $\eta_{T + i} \ge \eta_T$.
+            \item $\eta_T$ can also be computed efficiently, given samples.
+        \end{itemize}
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{An Algorithm for Sparse QCQPs}
+    \begin{algorithm}[H]
+    \caption{The Greedy Conditioning Heuristic}
+    \label{alg:greedy}
+    \begin{algorithmic}
+        \State $T \gets \varnothing$
+        \For{$t = 1 \dots k$}
+            \State $j \gets \argmax \eta_{T + j}$
+            \State $T \gets T + j$
+        \EndFor
+
+        \Return $T$
+    \end{algorithmic}
+    \end{algorithm}
+
+    We have seen that this will always produce an answer which is at least $\eta$, and we have means of computing all of these things efficiently.
+\end{frame}
+\begin{frame}
+    \frametitle{Speed}
+    \textbf{Bad news:} This algorithm is very slow!
+
+    \textbf{Good news:} we can make this faster.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    Recall the Schur complement identity for determinants:
+    \begin{align*}
+        \det(X|_S) = X_{ii} \det((X \setminus i)|_{S \setminus i}),
+    \end{align*}
+    where 
+    \[
+        X \setminus i = X - \frac{1}{X_{ii}} X_i X_i^{\intercal}.
+    \]
+    Here, $X_i$ is the $i^{th}$ column of $X$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    \begin{block}{Theorem}
+        \[
+            c_{n,\{i\}}^k(X) = X_{ii} c_{n-1}^{k-1}(X \setminus i).
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    Notice that conditionings are given by `rank 1 update' formula. This suggests that maybe can speed this up.
+
+    \begin{block}{Taylor Expansion}
+        If $p$ is a multivariate polynomial, and $p(v)$ vanishes to order $\deg(p) - 1$, then
+        \[
+            p(x + tv) = p(x) + t \langle \nabla p(x), v\rangle.
+        \]
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Conditionings}
+    \[
+        c_{n,\{i\}}^k(X) = X_{ii} (c_{n-1}^{k-1}(X) + X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i).
+    \]
+    We can compute this faster if we knew what $\nabla c_{n-1}^{k-1}(X)$ was.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Let $X = QDQ^{\intercal}$ be the diagonalization of a matrix $X$, i.e.
+    \begin{itemize}
+        \item $Q$ is the orthogonal matrix whose columns are eigenvectors of $X$.
+        \item $D$ is diagonal and its entries are eigenvalues of $X$.
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    $c_n^k(X)$ is given by the elementary symmetric polynomial in the eigenvalues of $X$:
+    \[
+        c_n^k(X) = \sum_{S \subseteq [n],|S| = k} \prod_{i \in S}\lambda_i,
+    \]
+    where the $\lambda_i$ are eigenvalues of $X$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    If the diagonalization of $X$ is given, the characteristic coefficient can be computed in $O(nk)$ time using dynamic programming to compute the elementary symmetric polynomial in the eigenvalues.
+
+    \textbf{Given a diagonalization of $X$, I can compute the characteristic coefficients of $X$ quickly.}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    \begin{block}{Theorem}
+        Given a diagonalization of a matrix $X$, we can compute $p|_i(X)$  \emph{all} in $O(n^2 + kn\log(n))$ time.
+    \end{block}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    We want to compute
+    \[
+        p|_i(X) = X_{ii} c_{n-1}^{k-1}(X - \frac{1}{X_{ii}}X_iX_i^{\intercal})?
+    \]
+    \textbf{Idea: } Use rank 1 updates instead of recomputing.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Because $\frac{1}{X_{ii}}X_iX_i^{\intercal}$ is rank 1, the first order Taylor expansion gives an exact answer:
+    \[
+        c_{n-1}^{k-1}(X - \frac{1}{X_{ii}}X_iX_i^{\intercal}) = c_{n-1}^{k-1}(X)  - \frac{1}{X_{ii}}X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i.
+    \]
+    If we already have $c_{n-1}^{k-1}(X)$ for each $i$, we really just want to compute
+    \[
+        X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i.
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    Because $\frac{1}{X_{ii}}X_iX_i^{\intercal}$ is rank 1, the first order Taylor expansion gives an exact answer:
+    \[
+        c_{n-1}^{k-1}(X - \frac{1}{X_{ii}}X_iX_i^{\intercal}) = c_{n-1}^{k-1}(X)  - \frac{1}{X_{ii}}X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i.
+    \]
+    If we already have $c_{n-1}^{k-1}(X)$ for each $i$, we really just want to compute
+    \[
+        X_i^{\intercal}{\color{red}\nabla c_{n-1}^{k-1}(X)}X_i.
+    \]
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    \textbf{Idea:} We can change basis because characteristic coefficients are basis invariant, so if $X = QDQ^{\intercal}$, then
+    \[
+        \nabla c_{n-1}^{k-1}(X) = Q\nabla c_{n-1}^{k-1}(D)Q^{\intercal},
+    \]
+    \textbf{$\nabla c_{n-1}^{k-1}(D)$ is a diagonal matrix.}
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    \textbf{Idea:} We can change basis because characteristic coefficients are basis invariant, so
+    \[
+        X_i^{\intercal}\nabla c_{n-1}^{k-1}(X)X_i = X_i^{\intercal}Q\nabla c_{n-1}^{k-1}(D)Q^{\intercal}X_i,
+    \]
+    \pause
+    Now, we use the fact that $Q$ is a matrix of eigenvectors, and $X_i$ is a column of $X$ to get
+    \[
+        X_i^{\intercal}Q = DQ_i^{\intercal},
+    \]
+    where $Q_i$ is a row of $Q$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    The matrix-vector product
+    \[
+        Q^{*2}D^2\diag(\nabla c_{n-1}^{k-1}(D))
+    \]
+    computes the updates for \emph{all values of $i$ at the same time}, and it only takes $O(n^2)$ time to do, given $\nabla c_{n-1}^{k-1}(D)$.
+\end{frame}
+\begin{frame}
+    \frametitle{Computing Characteristic Polynomials.}
+    \[
+        \diag(\nabla c_{n-1}^{k-1}(D))
+    \]
+    Can be computed, for any diagonal matrix $D$ in $O(kn\log(n))$ time using dynamic programming.
+\end{frame}
+\begin{frame}
+    \tiny{
+\begin{table}[H]
+\begin{center}
+    \begin{tabular}{c|c c c c c c}
+        Dataset & Columns & $k$ & Found Value & Optimal Value & Gap & Time (s)\\
+        \hline
+        Wine & 13 & 5 & 3.43 & 3.43 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 4.45 & 4.59 & $0.03$ & $8\times 10^{-4}$\\
+        \hline
+        Pitprops & 13 & 5 & 3.40 & 3.40 & $<10^{-5}$ & $3\times 10^{-4}$\\
+             &    & 10 & 3.95 & 4.17 & $0.05$ & $8\times 10^{-4}$\\
+        \hline
+        MiniBooNE & 50 & 5 & 4.99 & 5.00 & $<10^{-5}$ & 0.003\\
+             &    & 10 & 9.99 & 9.99 & $<10^{-5}$ & 0.012\\
+        \hline
+        Communities & 101 & 5 & 4.51 & 4.86 & 0.07 & 0.02 \\
+             &    & 10 & 8.71 & 8.82 & $0.013$ & 0.09\\
+        \hline
+        Arrythmia & 274 & 5 & 4.18 & 4.23 & 0.012 & 0.39\\
+         & & 10 & 7.49 & 7.53 & 0.005 & 1.44
+    \end{tabular}
+
+\end{center}
+\caption{A table describing the results of running our algorithm for sparse PCA on various datasets and values of $k$.  The gap is defined to be $\frac{\text{Optimal Value} - \text{Found Value}}{\text{Optimal Value}}$.}
+\end{table}}
+\end{frame}
+
+\begin{frame}
+    \frametitle{Conclusions}
+    \begin{itemize}
+        \item Fast algorithm based on the roots of polynomials.
+        \item Effective on practical problems.
+        \item Connections to probability and algebra.
+    \end{itemize}
+\end{frame}
+\begin{frame}
+    \frametitle{Open Questions}
+    \begin{itemize}
+        \item Can we prove that this is effective on some interesting instances?
+        \item Are there smarter ways of reducing the size of the supports for our polynomials?
+        \item Are there faster sampling based methods for sparse regression?
+        \item Are there other LPM polynomials with interesting coefficients we can compute efficiently?
+    \end{itemize}
+    
+\end{frame}
+\end{document}
